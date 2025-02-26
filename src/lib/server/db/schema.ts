@@ -2,7 +2,7 @@
 /**
  * You need to comment this out when generating the migration-file.
  */
-// import "server-only";
+import "server-only";
 /********************************************************************************/
 
 import { Pool } from "pg";
@@ -48,6 +48,17 @@ export const userTable = pgTable("user", {
     .notNull(),
   role: userRolesEnum()
     .default("user"),
+});
+
+export const userDetailsTable = pgTable("user_details", {
+	userId: integer("user_id")
+		.notNull()
+		.references(() => userTable.id)
+    .primaryKey(),
+  firstName: varchar("first_name")
+    .notNull(),
+  lastName: varchar("last_name")
+    .notNull(),
 });
 
 export const sessionTable = pgTable("session", {

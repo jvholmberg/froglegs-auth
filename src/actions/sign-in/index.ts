@@ -33,7 +33,6 @@ export async function signInAction(formData: ISignInFormData): Promise<ActionRes
     };
   }
   
-  console.log(1);
   try {
     await signInFormDataSchema.parseAsync(formData);
   } catch {
@@ -42,26 +41,22 @@ export async function signInAction(formData: ISignInFormData): Promise<ActionRes
     };
   }
 
-  console.log(2);
 	const user = await getUserFromEmail(formData.email);
 	if (user === null) {
 		return {
 			message: "Inget konto kunde hittas"
 		};
 	}
-  console.log(3);
 	if (clientIP !== null && !ipBucket.consume(clientIP, 1)) {
 		return {
       message: "För många anrop",
 		};
 	}
-  console.log(4);
 	if (!throttler.consume(user.id)) {
 		return {
       message: "För många anrop",
 		};
 	}
-  console.log(5);
 	const passwordHash = await getUserPasswordHash(user.id);
 	const validPassword = await verifyPasswordHash(passwordHash, formData.password);
 	if (!validPassword) {
@@ -69,17 +64,14 @@ export async function signInAction(formData: ISignInFormData): Promise<ActionRes
 			message: "Ogiltigt lösenord"
 		};
 	}
-  console.log(6);
 	throttler.reset(user.id);
 	const sessionFlags: ISessionFlags = {
 		twoFactorVerified: false
 	};
-  console.log(7);
 	const sessionToken = generateSessionToken();
 	const session = await createSession(sessionToken, user.id, sessionFlags);
 	setSessionTokenCookie(sessionToken, session.expiresAt);
 
-  console.log(8);
 	if (!user.emailVerified) {
 		return redirect(ROUTE_VERIFY_EMAIL);
 	}
