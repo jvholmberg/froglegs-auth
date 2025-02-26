@@ -45,13 +45,6 @@ In `.nvmrc` you may see the chosen node-version for this app, it's important tha
 
 
 ## Building blocks
-- NextJS as 
-- Drizzle as ORM (Object-relational mapper) with postgress for db
-- Mantine as component library
-
-
-Built with SQLite.
-
 - Password check with HaveIBeenPwned
 - Email verification
 - 2FA with TOTP
