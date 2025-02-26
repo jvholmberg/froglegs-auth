@@ -12,11 +12,12 @@ import { redirect } from "next/navigation";
 import { globalPOSTRateLimit } from "@/lib/server/request";
 import { ISignInFormData, signInFormDataSchema } from "./schema";
 import { ROUTE_2FA, ROUTE_2FA_SETUP, ROUTE_VERIFY_EMAIL } from "@/lib/client/constants";
+import { IActionResult } from "../types";
 
 const throttler = new Throttler<number>([1, 2, 4, 8, 16, 30, 60, 180, 300]);
 const ipBucket = new RefillingTokenBucket<string>(20, 1);
 
-export async function signInAction(formData: ISignInFormData): Promise<ActionResult> {
+export async function signInAction(formData: ISignInFormData): Promise<IActionResult> {
   const belowRateLimit = await globalPOSTRateLimit();
 	if (!belowRateLimit) {
 		return {
@@ -79,8 +80,4 @@ export async function signInAction(formData: ISignInFormData): Promise<ActionRes
 		return redirect(ROUTE_2FA_SETUP);
 	}
 	return redirect(ROUTE_2FA);
-}
-
-interface ActionResult {
-	message: string;
 }

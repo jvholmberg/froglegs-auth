@@ -20,10 +20,11 @@ import { globalPOSTRateLimit } from "@/lib/server/request";
 import type { ISessionFlags } from "@/lib/server/session";
 import { ISignUpFormData, signUpFormDataSchema } from "./schema";
 import { ROUTE_2FA_SETUP } from "@/lib/client/constants";
+import { IActionResult } from "../types";
 
 const ipBucket = new RefillingTokenBucket<string>(3, 10);
 
-export async function signUpAction(formData: ISignUpFormData): Promise<ActionResult> {
+export async function signUpAction(formData: ISignUpFormData): Promise<IActionResult> {
   const belowRateLimit = await globalPOSTRateLimit();
 	if (!belowRateLimit) {
 		return {
@@ -77,8 +78,4 @@ export async function signUpAction(formData: ISignUpFormData): Promise<ActionRes
 	const session = await createSession(sessionToken, user.id, sessionFlags);
 	setSessionTokenCookie(sessionToken, session.expiresAt);
 	return redirect(ROUTE_2FA_SETUP);
-}
-
-interface ActionResult {
-	message: string;
 }

@@ -6,7 +6,7 @@ import { eq } from "drizzle-orm";
 import { encodeBase32LowerCaseNoPadding, encodeHexLowerCase } from "@oslojs/encoding";
 import { sha256 } from "@oslojs/crypto/sha2";
 
-import { db, userTable, sessionTable } from "@/lib/server/db/schema";
+import { db, userTable, sessionTable, userDetailsTable } from "@/lib/server/db/schema";
 import type { TblSession } from "@/lib/server/db/types";
 import { cache } from "react";
 import { cookies } from "next/headers";
@@ -15,9 +15,14 @@ import { IUser } from "@/lib/server/user";
 export async function validateSessionToken(token: string): Promise<ISessionValidationResult> {
 	const sessionId = encodeHexLowerCase(sha256(new TextEncoder().encode(token)));
 	const result = await db
-		.select({ user: userTable, session: sessionTable })
+		.select({
+      user: userTable,
+      userDetails: userDetailsTable,
+      session: sessionTable,
+    })
 		.from(sessionTable)
 		.innerJoin(userTable, eq(sessionTable.userId, userTable.id))
+		.leftJoin(userDetailsTable, eq(sessionTable.userId, userDetailsTable.userId))
 		.where(eq(sessionTable.id, sessionId));
 	if (result.length < 1) {
 		return { session: null, user: null };
@@ -26,6 +31,8 @@ export async function validateSessionToken(token: string): Promise<ISessionValid
   const user: IUser = {
 		id: result[0].user.id,
 		email: result[0].user.email,
+    firstName: result[0].userDetails?.firstName || null,
+    lastName: result[0].userDetails?.lastName || null,
 		emailVerified: result[0].user.emailVerified,
 		registered2FA: result[0].user.totpKey !== null,
 	};

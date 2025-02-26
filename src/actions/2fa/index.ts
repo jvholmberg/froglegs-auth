@@ -20,10 +20,11 @@ import {
 } from "@/actions/2fa/schema";
 import { recoveryCodeBucket, resetUser2FAWithRecoveryCode, totpBucket } from "@/lib/server/2fa";
 import { ROUTE_RECOVERY_CODE, ROUTE_2FA_SETUP, ROUTE_SETTINGS } from "@/lib/client/constants";
+import { IActionResult } from "../types";
 
 const totpUpdateBucket = new RefillingTokenBucket<number>(3, 60 * 10);
 
-export async function setup2FAAction(formData: ITwoFactorSetupFormData): Promise<ActionResult> {
+export async function setup2FAAction(formData: ITwoFactorSetupFormData): Promise<IActionResult> {
 	const belowRateLimit = await globalPOSTRateLimit();
   if (!belowRateLimit) {
 		return {
@@ -93,7 +94,7 @@ export async function setup2FAAction(formData: ITwoFactorSetupFormData): Promise
 	return redirect(ROUTE_RECOVERY_CODE);
 }
 
-export async function verify2FAAction(formData: ITwoFactorVerifyFormData): Promise<ActionResult> {
+export async function verify2FAAction(formData: ITwoFactorVerifyFormData): Promise<IActionResult> {
 	const belowRateLimit = await globalPOSTRateLimit();
   if (!belowRateLimit) {
 		return {
@@ -146,7 +147,7 @@ export async function verify2FAAction(formData: ITwoFactorVerifyFormData): Promi
 	return redirect(ROUTE_SETTINGS);
 }
 
-export async function reset2FAAction(formData: ITwoFactorResetFormData): Promise<ActionResult> {
+export async function reset2FAAction(formData: ITwoFactorResetFormData): Promise<IActionResult> {
 	const { session, user } = await getCurrentSession();
 	if (session === null) {
 		return {
@@ -185,18 +186,4 @@ export async function reset2FAAction(formData: ITwoFactorResetFormData): Promise
 	}
 	recoveryCodeBucket.reset(user.id);
 	return redirect(ROUTE_2FA_SETUP);
-}
-
-interface ActionResult {
-	message: string;
-}
-
-
-interface ActionResult {
-	message: string;
-}
-
-
-interface ActionResult {
-	message: string;
 }

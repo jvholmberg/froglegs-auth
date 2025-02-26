@@ -3,7 +3,6 @@
 import "server-only";
 /********************************************************************************/
 
-
 import { verifyPasswordStrength } from "@/lib/server/password";
 import {
 	deletePasswordResetSessionTokenCookie,
@@ -36,10 +35,11 @@ import { ExpiringTokenBucket } from "@/lib/server/rate-limit";
 import { recoveryCodeBucket, resetUser2FAWithRecoveryCode, totpBucket } from "@/lib/server/2fa";
 import { verifyTOTP } from "@oslojs/otp";
 import { ROUTE_SETTINGS, ROUTE_RESET_PASSWORD, ROUTE_RESET_PASSWORD_2FA } from "@/lib/client/constants";
+import { IActionResult } from "../types";
 
 const emailVerificationBucket = new ExpiringTokenBucket<number>(5, 60 * 30);
 
-export async function resetPasswordAction(formData: IResetPasswordFormData): Promise<ActionResult> {
+export async function resetPasswordAction(formData: IResetPasswordFormData): Promise<IActionResult> {
   const belowRateLimit = await globalPOSTRateLimit();
 	if (!belowRateLimit) {
 		return {
@@ -91,7 +91,7 @@ export async function resetPasswordAction(formData: IResetPasswordFormData): Pro
 	return redirect(ROUTE_SETTINGS);
 }
 
-export async function verifyPasswordResetEmailAction(formData: IPasswordResetEmailVerificationFormData): Promise<ActionResult> {
+export async function verifyPasswordResetEmailAction(formData: IPasswordResetEmailVerificationFormData): Promise<IActionResult> {
 	const belowRateLimit = await globalPOSTRateLimit();
   if (!belowRateLimit) {
 		return {
@@ -142,7 +142,7 @@ export async function verifyPasswordResetEmailAction(formData: IPasswordResetEma
 	return redirect(ROUTE_RESET_PASSWORD_2FA);
 }
 
-export async function verifyPasswordReset2FAWithTOTPAction(formData: IPasswordResetTOTPFormData): Promise<ActionResult> {
+export async function verifyPasswordReset2FAWithTOTPAction(formData: IPasswordResetTOTPFormData): Promise<IActionResult> {
 	const belowRateLimit = await globalPOSTRateLimit();
   if (!belowRateLimit) {
 		return {
@@ -195,7 +195,7 @@ export async function verifyPasswordReset2FAWithTOTPAction(formData: IPasswordRe
 	return redirect(ROUTE_RESET_PASSWORD);
 }
 
-export async function verifyPasswordReset2FAWithRecoveryCodeAction(formData: IPasswordResetRecoveryCodeFormData): Promise<ActionResult> {
+export async function verifyPasswordReset2FAWithRecoveryCodeAction(formData: IPasswordResetRecoveryCodeFormData): Promise<IActionResult> {
 	const belowRateLimit = await globalPOSTRateLimit();
   if (!belowRateLimit) {
 		return {
@@ -241,8 +241,4 @@ export async function verifyPasswordReset2FAWithRecoveryCodeAction(formData: IPa
 	}
 	recoveryCodeBucket.reset(session.userId);
 	return redirect(ROUTE_RESET_PASSWORD);
-}
-
-interface ActionResult {
-	message: string;
 }

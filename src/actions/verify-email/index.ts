@@ -20,10 +20,11 @@ import { updateUserEmailAndSetEmailAsVerified } from "@/lib/server/user";
 import { redirect } from "next/navigation";
 import { IVerifyEmailFormData, verifyEmailFormDataSchema } from "./schema";
 import { ROUTE_2FA_SETUP, ROUTE_SETTINGS } from "@/lib/client/constants";
+import { IActionResult } from "../types";
 
 const bucket = new ExpiringTokenBucket<number>(5, 60 * 30);
 
-export async function verifyEmailAction(formData: IVerifyEmailFormData): Promise<ActionResult> {
+export async function verifyEmailAction(formData: IVerifyEmailFormData): Promise<IActionResult> {
   const belowRateLimit = await globalPOSTRateLimit();
   if (!belowRateLimit) {
     return {
@@ -92,7 +93,7 @@ export async function verifyEmailAction(formData: IVerifyEmailFormData): Promise
 	return redirect(ROUTE_SETTINGS);
 }
 
-export async function resendEmailVerificationCodeAction(): Promise<ActionResult> {
+export async function resendEmailVerificationCodeAction(): Promise<IActionResult> {
 	const { session, user } = await getCurrentSession();
 	if (session === null) {
 		return {
@@ -135,8 +136,4 @@ export async function resendEmailVerificationCodeAction(): Promise<ActionResult>
 	return {
 		message: "A new code was sent to your inbox."
 	};
-}
-
-interface ActionResult {
-	message: string;
 }

@@ -5,11 +5,11 @@ import "server-only";
 
 import { globalPOSTRateLimit } from "@/lib/server/request";
 import { getCurrentSession, invalidateSession, deleteSessionTokenCookie } from "@/lib/server/session";
-import { ActionResult } from "next/dist/server/app-render/types";
 import { redirect } from "next/navigation";
 import { ROUTE_SIGN_IN } from "@/lib/client/constants";
+import { IActionResult } from "../types";
 
-export async function signoutAction(): Promise<ActionResult> {
+export async function signoutAction(): Promise<IActionResult> {
 	if (!globalPOSTRateLimit()) {
 		return {
 			message: "Too many requests"

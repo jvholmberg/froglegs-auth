@@ -2,32 +2,28 @@
 import "server-only";
 /********************************************************************************/
 
-import { db, userTable } from "@/lib/server/db/schema";
+import { db, userDetailsTable, userTable } from "@/lib/server/db/schema";
 import { decrypt, decryptToString, encrypt, encryptString } from "@/lib/server/encryption";
 import { hashPassword } from "@/lib/server/password";
 import { generateRandomRecoveryCode } from "@/lib/server/utils";
 import { and, eq } from "drizzle-orm";
+import { IUpdateUserDetailsFormData } from "@/actions/user/schema";
 
 export async function createUser(email: string, password: string) {
 	const passwordHash = await hashPassword(password);
 	const recoveryCode = generateRandomRecoveryCode();
 	const encryptedRecoveryCode = encryptString(recoveryCode);
-  const result = await db
+  const insertedUser = await db
     .insert(userTable)
     .values({
       email,
       passwordHash,
       recoveryCode: encryptedRecoveryCode,
     }).returning();
-	if (!result?.at(0)) {
+	if (!insertedUser.length) {
 		throw new Error("Unexpected error");
 	}
-	const user: IUser = {
-		id: result[0].id,
-		email,
-		emailVerified: false,
-		registered2FA: false
-	};
+  const user = getUserFromEmail(insertedUser[0].email);
 	return user;
 }
 
@@ -116,25 +112,51 @@ export async function resetUserRecoveryCode(userId: number) {
 
 export async function getUserFromEmail(email: string) {
   const result = await db
-    .select()
+    .select({
+      user: userTable,
+      userDetails: userDetailsTable,
+    })
     .from(userTable)
+    .leftJoin(userDetailsTable, eq(userTable.id, userDetailsTable.userId))
     .where(eq(userTable.email, email));
-    console.log(result);
 	if (!result.length) {
 		return null;
 	}
 	const user: IUser = {
-		id: result[0].id,
-		email: result[0].email,
-		emailVerified: result[0].emailVerified,
-		registered2FA: result[0].totpKey !== null
+		id: result[0].user.id,
+		email: result[0].user.email,
+    firstName: result[0].userDetails?.firstName || null,
+    lastName: result[0].userDetails?.lastName || null,
+		emailVerified: result[0].user.emailVerified,
+		registered2FA: result[0].user.totpKey !== null
 	};
 	return user;
+}
+
+export async function updateUserDetails(userId: number, data: IUpdateUserDetailsFormData) {
+  const updatedUser = await db
+    .insert(userDetailsTable)
+    .values({
+      userId: userId,
+      firstName: data.firstName,
+      lastName: data.lastName,
+    })
+    .onConflictDoUpdate({
+      target: userDetailsTable.userId,
+      set: {
+        firstName: data.firstName,
+        lastName: data.lastName
+      },
+    })
+    .returning();
+	return updatedUser;
 }
 
 export interface IUser {
 	id: number;
 	email: string;
+  firstName: string | null;
+  lastName: string | null;
 	emailVerified: boolean;
 	registered2FA: boolean;
 }

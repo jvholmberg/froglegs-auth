@@ -17,11 +17,12 @@ import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { forgotPasswordFormDataSchema, IForgotPasswordFormData } from "./schema";
 import { ROUTE_RESET_PASSWORD_VERIFY_EMAIL } from "@/lib/client/constants";
+import { IActionResult } from "../types";
 
 const passwordResetEmailIPBucket = new RefillingTokenBucket<string>(3, 60);
 const passwordResetEmailUserBucket = new RefillingTokenBucket<number>(3, 60);
 
-export async function forgotPasswordAction(formData: IForgotPasswordFormData): Promise<ActionResult> {
+export async function forgotPasswordAction(formData: IForgotPasswordFormData): Promise<IActionResult> {
   const belowRateLimit = await globalPOSTRateLimit();
 	if (!belowRateLimit) {
 		return {
@@ -69,8 +70,4 @@ export async function forgotPasswordAction(formData: IForgotPasswordFormData): P
 	await sendPasswordResetEmail(session.email, session.code);
 	await setPasswordResetSessionTokenCookie(sessionToken, session.expiresAt);
 	return redirect(ROUTE_RESET_PASSWORD_VERIFY_EMAIL);
-}
-
-interface ActionResult {
-	message: string;
 }
