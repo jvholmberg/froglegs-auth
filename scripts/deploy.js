@@ -9,8 +9,8 @@ dotenv.config({ path: '.env.local' });
 
 // Set these before attempting upload
 const DOCKER_EXTERNAL_PORT = 3005;
-const DOCKER_IMAGE_NAME = 'froglegs';
-const DOCKER_CONTAINER_NAME = 'froglegs';
+const DOCKER_IMAGE_NAME = 'froglegs_auth';
+const DOCKER_CONTAINER_NAME = 'froglegs_auth';
 
 if (!DOCKER_EXTERNAL_PORT) { throw new Error('DOCKER_EXTERNAL_PORT not set')}
 if (!DOCKER_IMAGE_NAME) { throw new Error('DOCKER_IMAGE_NAME not set')}

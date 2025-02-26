@@ -1,4 +1,4 @@
-# Froglegs
+# Froglegs Auth
 This project is built upon NextJS with typescript enabled. For storing data we have selected postgres and drizzle as the ORM (Object-relational mapper). For managing UI we opted for Mantine due to it's extensive collection of components and ease to use. Auth is implemented according to Lucia-auth (This package has been deprecated hence all code lies in this project instead meaning we own it).
 
 ### Your environment
