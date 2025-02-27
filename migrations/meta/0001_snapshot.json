@@ -1,6 +1,6 @@
 {
-  "id": "9c7ed949-ac25-437e-9e4a-146d796da47b",
-  "prevId": "1dfa6a79-f450-4fcd-9596-c21fbd854509",
+  "id": "6b048c63-29f4-421d-873a-ffeb723801c9",
+  "prevId": "995344c3-0873-426f-b607-775ebac8f48d",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -10,7 +10,7 @@
       "columns": {
         "id": {
           "name": "id",
-          "type": "text",
+          "type": "serial",
           "primaryKey": true,
           "notNull": true
         },
@@ -24,10 +24,16 @@
           "name": "user_id",
           "type": "integer",
           "primaryKey": false,
-          "notNull": true
+          "notNull": false
         },
-        "externalId": {
-          "name": "externalId",
+        "external_organization_id": {
+          "name": "external_organization_id",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "external_user_id": {
+          "name": "external_user_id",
           "type": "varchar",
           "primaryKey": false,
           "notNull": true
@@ -56,7 +62,7 @@
           "name": "expires_at",
           "type": "timestamp with time zone",
           "primaryKey": false,
-          "notNull": true
+          "notNull": false
         }
       },
       "indexes": {},
@@ -333,8 +339,14 @@
           "primaryKey": false,
           "notNull": true
         },
-        "externalId": {
-          "name": "externalId",
+        "external_organization_id": {
+          "name": "external_organization_id",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "external_user_id": {
+          "name": "external_user_id",
           "type": "varchar",
           "primaryKey": false,
           "notNull": true
@@ -363,10 +375,10 @@
           "onDelete": "no action",
           "onUpdate": "no action"
         },
-        "user_app_app_id_user_id_fk": {
-          "name": "user_app_app_id_user_id_fk",
+        "user_app_app_id_app_id_fk": {
+          "name": "user_app_app_id_app_id_fk",
           "tableFrom": "user_app",
-          "tableTo": "user",
+          "tableTo": "app",
           "columnsFrom": [
             "app_id"
           ],

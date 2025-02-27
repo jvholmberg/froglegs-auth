@@ -1,6 +1,6 @@
 {
-  "id": "995344c3-0873-426f-b607-775ebac8f48d",
-  "prevId": "00000000-0000-0000-0000-000000000000",
+  "id": "363bb858-ecaf-4480-864a-2b368b716f9f",
+  "prevId": "1db1748c-b026-41b3-9eed-9ab34c275ad5",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -19,12 +19,6 @@
           "type": "integer",
           "primaryKey": false,
           "notNull": true
-        },
-        "user_id": {
-          "name": "user_id",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": false
         },
         "external_organization_id": {
           "name": "external_organization_id",
@@ -52,12 +46,6 @@
           "primaryKey": false,
           "notNull": true
         },
-        "code": {
-          "name": "code",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": true
-        },
         "expires_at": {
           "name": "expires_at",
           "type": "timestamp with time zone",
@@ -67,25 +55,12 @@
       },
       "indexes": {},
       "foreignKeys": {
-        "app_invitation_app_id_user_id_fk": {
-          "name": "app_invitation_app_id_user_id_fk",
+        "app_invitation_app_id_app_id_fk": {
+          "name": "app_invitation_app_id_app_id_fk",
           "tableFrom": "app_invitation",
-          "tableTo": "user",
+          "tableTo": "app",
           "columnsFrom": [
             "app_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "no action",
-          "onUpdate": "no action"
-        },
-        "app_invitation_user_id_user_id_fk": {
-          "name": "app_invitation_user_id_user_id_fk",
-          "tableFrom": "app_invitation",
-          "tableTo": "user",
-          "columnsFrom": [
-            "user_id"
           ],
           "columnsTo": [
             "id"
@@ -375,10 +350,10 @@
           "onDelete": "no action",
           "onUpdate": "no action"
         },
-        "user_app_app_id_user_id_fk": {
-          "name": "user_app_app_id_user_id_fk",
+        "user_app_app_id_app_id_fk": {
+          "name": "user_app_app_id_app_id_fk",
           "tableFrom": "user_app",
-          "tableTo": "user",
+          "tableTo": "app",
           "columnsFrom": [
             "app_id"
           ],

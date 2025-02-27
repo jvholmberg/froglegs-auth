@@ -5,15 +5,29 @@
     {
       "idx": 0,
       "version": "7",
-      "when": 1740565308467,
-      "tag": "0000_clean_baron_strucker",
+      "when": 1740587933229,
+      "tag": "0000_many_jocasta",
       "breakpoints": true
     },
     {
       "idx": 1,
       "version": "7",
-      "when": 1740574743715,
-      "tag": "0001_round_zarda",
+      "when": 1740588667900,
+      "tag": "0001_exotic_scalphunter",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1740643157505,
+      "tag": "0002_sharp_toro",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1740694272093,
+      "tag": "0003_curly_stick",
       "breakpoints": true
     }
   ]

@@ -6,7 +6,7 @@ import { cookies } from "next/headers";
 import { eq } from "drizzle-orm";
 import { encodeHexLowerCase } from "@oslojs/encoding";
 import { sha256 } from "@oslojs/crypto/sha2";
-import { db, passwordResetSessionTable, userTable } from "@/lib/server/db/schema";
+import { db, passwordResetSessionTable, userAppTable, userDetailsTable, userTable } from "@/lib/server/db/schema";
 import { TblPasswordResetSession } from "@/lib/server/db/types";
 import { generateRandomOTP } from "@/lib/server/utils";
 import { IUser } from "./user";
@@ -29,19 +29,37 @@ export async function createPasswordResetSession(token: string, userId: number, 
 export async function validatePasswordResetSessionToken(token: string): Promise<IPasswordResetSessionValidationResult> {
 	const sessionId = encodeHexLowerCase(sha256(new TextEncoder().encode(token)));
   const result = await db
-    .select({ user: userTable, session: passwordResetSessionTable })
+    .select({
+      user: userTable,
+      userDetails: userDetailsTable,
+      session: passwordResetSessionTable,
+    })
     .from(passwordResetSessionTable)
     .innerJoin(userTable, eq(passwordResetSessionTable.userId, userTable.id))
+    .leftJoin(userDetailsTable, eq(passwordResetSessionTable.userId, userDetailsTable.userId))
     .where(eq(passwordResetSessionTable.id, sessionId));
   if (result.length < 1) {
     return { session: null, user: null };
   }
+  const appResult = await db
+    .select()
+    .from(userAppTable)
+    .where(eq(userAppTable.userId, result[0].user.id));
   const { session } = result[0];
   const user: IUser = {
 		id: result[0].user.id,
 		email: result[0].user.email,
+    role: result[0].user.role,
+    firstName: result[0].userDetails?.firstName || null,
+    lastName: result[0].userDetails?.lastName || null,
 		emailVerified: result[0].user.emailVerified,
 		registered2FA: result[0].user.totpKey !== null,
+    apps: appResult?.map((e) => ({
+      appId: e.appId,
+      externalOrganizationId: e.externalOrganizationId,
+      externalId: e.externalId,
+      role: e.role,
+    })) || []
 	};
   if (Date.now() >= session.expiresAt.getTime()) {
     await db.delete(passwordResetSessionTable).where(eq(passwordResetSessionTable.id, session.id));

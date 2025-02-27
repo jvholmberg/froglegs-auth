@@ -1,14 +1,15 @@
 CREATE TYPE "public"."enum_user_app_roles" AS ENUM('super_admin', 'admin', 'manager', 'user', 'guest');--> statement-breakpoint
 CREATE TYPE "public"."enum_user_roles" AS ENUM('super_admin', 'admin', 'user');--> statement-breakpoint
 CREATE TABLE "app_invitation" (
-	"id" text PRIMARY KEY NOT NULL,
+	"id" serial PRIMARY KEY NOT NULL,
 	"app_id" integer NOT NULL,
-	"user_id" integer NOT NULL,
-	"externalId" varchar NOT NULL,
+	"user_id" integer,
+	"external_organization_id" varchar,
+	"external_user_id" varchar NOT NULL,
 	"role" "enum_user_app_roles" DEFAULT 'user',
 	"email" varchar NOT NULL,
 	"code" varchar NOT NULL,
-	"expires_at" timestamp with time zone NOT NULL
+	"expires_at" timestamp with time zone
 );
 --> statement-breakpoint
 CREATE TABLE "app" (
@@ -47,8 +48,15 @@ CREATE TABLE "session" (
 CREATE TABLE "user_app" (
 	"user_id" integer NOT NULL,
 	"app_id" integer NOT NULL,
-	"externalId" varchar NOT NULL,
+	"external_organization_id" varchar,
+	"external_user_id" varchar NOT NULL,
 	"role" "enum_user_app_roles" DEFAULT 'user'
+);
+--> statement-breakpoint
+CREATE TABLE "user_details" (
+	"user_id" integer PRIMARY KEY NOT NULL,
+	"first_name" varchar NOT NULL,
+	"last_name" varchar NOT NULL
 );
 --> statement-breakpoint
 CREATE TABLE "user" (
@@ -68,4 +76,5 @@ ALTER TABLE "email_verification_request" ADD CONSTRAINT "email_verification_requ
 ALTER TABLE "password_reset_session" ADD CONSTRAINT "password_reset_session_user_id_user_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."user"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "session" ADD CONSTRAINT "session_user_id_user_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."user"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "user_app" ADD CONSTRAINT "user_app_user_id_user_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."user"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "user_app" ADD CONSTRAINT "user_app_app_id_user_id_fk" FOREIGN KEY ("app_id") REFERENCES "public"."user"("id") ON DELETE no action ON UPDATE no action;
+ALTER TABLE "user_app" ADD CONSTRAINT "user_app_app_id_user_id_fk" FOREIGN KEY ("app_id") REFERENCES "public"."user"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "user_details" ADD CONSTRAINT "user_details_user_id_user_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."user"("id") ON DELETE no action ON UPDATE no action;

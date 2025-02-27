@@ -2,12 +2,11 @@
 
 import { updateUserDetailsAction } from "@/actions/user";
 import { IUpdateUserDetailsFormData, updateUserDetailsFormDataSchema } from "@/actions/user/schema";
-import { IUser } from "@/lib/server/user";
 import { TextInput, Button } from "@mantine/core";
 import { useForm } from "@mantine/form";
 
 interface Props {
-  data: IUser;
+  data: Partial<IUpdateUserDetailsFormData>;
 }
 
 export function SettingsAccountForm({ data }: Props) {
@@ -55,7 +54,7 @@ export function SettingsAccountForm({ data }: Props) {
         placeholder="Ange ditt efternamn"
         {...form.getInputProps(`lastName`)} />
       <Button type="submit" fullWidth mt="xl" size="md" color="dark">
-        spara
+        Spara
       </Button>
     </form>
   );

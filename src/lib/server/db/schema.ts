@@ -2,7 +2,7 @@
 /**
  * You need to comment this out when generating the migration-file.
  */
-import "server-only";
+// import "server-only";
 /********************************************************************************/
 
 import { Pool } from "pg";
@@ -46,15 +46,14 @@ export const userTable = pgTable("user", {
   totpKey: bytea("totp_key"),
   recoveryCode: bytea("recovery_code")
     .notNull(),
-  role: userRolesEnum()
+  role: userRolesEnum("role")
     .default("user"),
 });
 
 export const userDetailsTable = pgTable("user_details", {
 	userId: integer("user_id")
-		.notNull()
-		.references(() => userTable.id)
-    .primaryKey(),
+    .primaryKey()
+		.references(() => userTable.id),
   firstName: varchar("first_name")
     .notNull(),
   lastName: varchar("last_name")
@@ -127,30 +126,26 @@ export const userAppTable = pgTable("user_app", {
 		.references(() => userTable.id),
   appId: integer("app_id")
     .notNull()
-    .references(() => userTable.id),
-  externalId: varchar()
+    .references(() => appTable.id),
+  externalOrganizationId: varchar("external_organization_id"),
+  externalId: varchar("external_user_id")
     .notNull(),
-  role: userAppRolesEnum()
+  role: userAppRolesEnum("role")
     .default("user"),
 });
 
 export const appInvitationTable = pgTable("app_invitation", {
-	id: text("id")
+	id: serial("id")
     .primaryKey(),
   appId: integer("app_id")
     .notNull()
-    .references(() => userTable.id),
-	userId: integer("user_id")
-		.notNull()
-		.references(() => userTable.id),
-  externalId: varchar()
+    .references(() => appTable.id),
+  externalOrganizationId: varchar("external_organization_id"),
+  externalId: varchar("external_user_id")
     .notNull(),
-  role: userAppRolesEnum()
+  role: userAppRolesEnum("role")
     .default("user"),
   email: varchar("email")
     .notNull(),
-  code: varchar("code")
-    .notNull(),
-  expiresAt: timestamp("expires_at", { withTimezone: true, mode: "date" })
-    .notNull(),
+  expiresAt: timestamp("expires_at", { withTimezone: true, mode: "date" }),
 });

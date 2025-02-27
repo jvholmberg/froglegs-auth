@@ -6,7 +6,7 @@ import { eq } from "drizzle-orm";
 import { encodeBase32LowerCaseNoPadding, encodeHexLowerCase } from "@oslojs/encoding";
 import { sha256 } from "@oslojs/crypto/sha2";
 
-import { db, userTable, sessionTable, userDetailsTable } from "@/lib/server/db/schema";
+import { db, userTable, sessionTable, userDetailsTable, userAppTable } from "@/lib/server/db/schema";
 import type { TblSession } from "@/lib/server/db/types";
 import { cache } from "react";
 import { cookies } from "next/headers";
@@ -27,14 +27,26 @@ export async function validateSessionToken(token: string): Promise<ISessionValid
 	if (result.length < 1) {
 		return { session: null, user: null };
 	}
+	const appResult = await db
+		.select()
+		.from(userAppTable)
+		.where(eq(userAppTable.userId, result[0].user.id));
+
   const { session } = result[0];
   const user: IUser = {
 		id: result[0].user.id,
 		email: result[0].user.email,
+    role: result[0].user.role,
     firstName: result[0].userDetails?.firstName || null,
     lastName: result[0].userDetails?.lastName || null,
 		emailVerified: result[0].user.emailVerified,
 		registered2FA: result[0].user.totpKey !== null,
+    apps: appResult?.map((e) => ({
+      appId: e.appId,
+      externalOrganizationId: e.externalOrganizationId,
+      externalId: e.externalId,
+      role: e.role,
+    })) || []
 	};
 	if (Date.now() >= session.expiresAt.getTime()) {
 		await db.delete(sessionTable).where(eq(sessionTable.id, session.id));

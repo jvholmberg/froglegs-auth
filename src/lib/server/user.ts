@@ -2,7 +2,7 @@
 import "server-only";
 /********************************************************************************/
 
-import { db, userDetailsTable, userTable } from "@/lib/server/db/schema";
+import { db, userAppTable, userDetailsTable, userTable } from "@/lib/server/db/schema";
 import { decrypt, decryptToString, encrypt, encryptString } from "@/lib/server/encryption";
 import { hashPassword } from "@/lib/server/password";
 import { generateRandomRecoveryCode } from "@/lib/server/utils";
@@ -122,13 +122,25 @@ export async function getUserFromEmail(email: string) {
 	if (!result.length) {
 		return null;
 	}
+  const appResult = await db
+    .select()
+    .from(userAppTable)
+    .where(eq(userAppTable.userId, result[0].user.id));
+
 	const user: IUser = {
 		id: result[0].user.id,
 		email: result[0].user.email,
+    role: result[0].user.role,
     firstName: result[0].userDetails?.firstName || null,
     lastName: result[0].userDetails?.lastName || null,
 		emailVerified: result[0].user.emailVerified,
-		registered2FA: result[0].user.totpKey !== null
+		registered2FA: result[0].user.totpKey !== null,
+    apps: appResult?.map((e) => ({
+      appId: e.appId,
+      externalOrganizationId: e.externalOrganizationId,
+      externalId: e.externalId,
+      role: e.role,
+    })) || []
 	};
 	return user;
 }
@@ -137,26 +149,36 @@ export async function updateUserDetails(userId: number, data: IUpdateUserDetails
   const updatedUser = await db
     .insert(userDetailsTable)
     .values({
-      userId: userId,
-      firstName: data.firstName,
-      lastName: data.lastName,
+      userId,
+      firstName: data.firstName || "",
+      lastName: data.lastName || "",
     })
     .onConflictDoUpdate({
       target: userDetailsTable.userId,
       set: {
-        firstName: data.firstName,
-        lastName: data.lastName
+        firstName: data.firstName || "",
+        lastName: data.lastName || "",
       },
     })
     .returning();
 	return updatedUser;
 }
 
+export type UserRole = "super_admin" | "admin" | "user";
+export type UserAppRole = "super_admin" | "admin" | "manager" | "user" | "guest";
+
 export interface IUser {
 	id: number;
 	email: string;
+  role: "super_admin" | "admin" | "user" | null;
   firstName: string | null;
   lastName: string | null;
 	emailVerified: boolean;
 	registered2FA: boolean;
+  apps: {
+    appId: number;
+    externalOrganizationId: string | null;
+    externalId: string;
+    role: "super_admin" | "admin" | "manager" | "user" | "guest" | null;
+  }[];
 }

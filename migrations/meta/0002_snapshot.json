@@ -1,6 +1,6 @@
 {
-  "id": "995344c3-0873-426f-b607-775ebac8f48d",
-  "prevId": "00000000-0000-0000-0000-000000000000",
+  "id": "1db1748c-b026-41b3-9eed-9ab34c275ad5",
+  "prevId": "6b048c63-29f4-421d-873a-ffeb723801c9",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -67,10 +67,10 @@
       },
       "indexes": {},
       "foreignKeys": {
-        "app_invitation_app_id_user_id_fk": {
-          "name": "app_invitation_app_id_user_id_fk",
+        "app_invitation_app_id_app_id_fk": {
+          "name": "app_invitation_app_id_app_id_fk",
           "tableFrom": "app_invitation",
-          "tableTo": "user",
+          "tableTo": "app",
           "columnsFrom": [
             "app_id"
           ],
@@ -375,10 +375,10 @@
           "onDelete": "no action",
           "onUpdate": "no action"
         },
-        "user_app_app_id_user_id_fk": {
-          "name": "user_app_app_id_user_id_fk",
+        "user_app_app_id_app_id_fk": {
+          "name": "user_app_app_id_app_id_fk",
           "tableFrom": "user_app",
-          "tableTo": "user",
+          "tableTo": "app",
           "columnsFrom": [
             "app_id"
           ],

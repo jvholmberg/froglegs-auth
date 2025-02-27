@@ -67,15 +67,17 @@ export async function signUpAction(formData: ISignUpFormData): Promise<IActionRe
 		};
 	}
 	const user = await createUser(formData.email, formData.password);
-	const emailVerificationRequest = await createEmailVerificationRequest(user.id, user.email);
-	sendVerificationEmail(emailVerificationRequest.email, emailVerificationRequest.code);
-	setEmailVerificationRequestCookie(emailVerificationRequest);
+  if (user) {
+    const emailVerificationRequest = await createEmailVerificationRequest(user.id, user.email);
+    sendVerificationEmail(emailVerificationRequest.email, emailVerificationRequest.code);
+    setEmailVerificationRequestCookie(emailVerificationRequest);
+    const sessionFlags: ISessionFlags = {
+      twoFactorVerified: false
+    };
+    const sessionToken = generateSessionToken();
+    const session = await createSession(sessionToken, user.id, sessionFlags);
+    setSessionTokenCookie(sessionToken, session.expiresAt);
+  }
 
-	const sessionFlags: ISessionFlags = {
-		twoFactorVerified: false
-	};
-	const sessionToken = generateSessionToken();
-	const session = await createSession(sessionToken, user.id, sessionFlags);
-	setSessionTokenCookie(sessionToken, session.expiresAt);
 	return redirect(ROUTE_2FA_SETUP);
 }
