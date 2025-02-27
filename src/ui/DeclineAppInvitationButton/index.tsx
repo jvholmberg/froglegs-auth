@@ -47,7 +47,7 @@ export function DeclineAppInvitationButton(props: Props) {
         fw={500}
         size="xs"
         mr="sm"
-        color="dark"
+        color="red"
         variant="filled">
         Ta bort
       </Button>

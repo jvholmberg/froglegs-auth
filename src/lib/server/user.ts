@@ -145,23 +145,26 @@ export async function getUserFromEmail(email: string) {
 	return user;
 }
 
-export async function updateUserDetails(userId: number, data: IUpdateUserDetailsFormData) {
-  const updatedUser = await db
-    .insert(userDetailsTable)
-    .values({
-      userId,
-      firstName: data.firstName || "",
-      lastName: data.lastName || "",
-    })
-    .onConflictDoUpdate({
-      target: userDetailsTable.userId,
-      set: {
+export async function updateUserDetails(userId: number, data: IUpdateUserDetailsFormData): Promise<boolean> {
+  try {
+    await db
+      .insert(userDetailsTable)
+      .values({
+        userId,
         firstName: data.firstName || "",
         lastName: data.lastName || "",
-      },
-    })
-    .returning();
-	return updatedUser;
+      })
+      .onConflictDoUpdate({
+        target: userDetailsTable.userId,
+        set: {
+          firstName: data.firstName || "",
+          lastName: data.lastName || "",
+        },
+      });
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 export type UserRole = "super_admin" | "admin" | "user";

@@ -2,14 +2,18 @@
 
 import { updateUserDetailsAction } from "@/actions/user";
 import { IUpdateUserDetailsFormData, updateUserDetailsFormDataSchema } from "@/actions/user/schema";
+import { ROUTE_SETTINGS } from "@/lib/client/constants";
 import { TextInput, Button } from "@mantine/core";
 import { useForm } from "@mantine/form";
+import { notifications } from "@mantine/notifications";
+import { useRouter } from "next/navigation";
 
 interface Props {
   data: Partial<IUpdateUserDetailsFormData>;
 }
 
 export function SettingsAccountForm({ data }: Props) {
+  const router = useRouter()
   const form = useForm<IUpdateUserDetailsFormData>({
     mode: "controlled",
     initialValues: {
@@ -33,7 +37,14 @@ export function SettingsAccountForm({ data }: Props) {
   });
   
   const handleSubmit = async (data: IUpdateUserDetailsFormData) => {
-    await updateUserDetailsAction(data);
+    const { notification, error } = await updateUserDetailsAction(data);
+    notifications.show(notification);
+    form.setSubmitting(false);
+    if (!error) {
+      router.push(ROUTE_SETTINGS);
+    } else {
+      console.log(error);
+    }
   };
 
 	return (

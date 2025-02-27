@@ -5,31 +5,24 @@ import "server-only";
 
 import { getCurrentSession } from "@/lib/server/session";
 import { updateUserDetails } from "@/lib/server/user";
-import { redirect } from "next/navigation";
-import { IActionResult } from "../types";
+import { IActionResultExtended } from "../types";
 import { IUpdateUserDetailsFormData, updateUserDetailsFormDataSchema } from "./schema";
+import { checkSignedIn, genericErrorResult, genericSuccesResult, genericValidationErrorResult } from "@/lib/server/utils";
 
-export async function updateUserDetailsAction(formData: IUpdateUserDetailsFormData): Promise<IActionResult> {
-  const { session, user } = await getCurrentSession();
-	if (session === null) {
-		return {
-			message: "Not authenticated"
-		};
-	}
-  if (user === null) {
-    return {
-      message: "Inget konto kunde hittas"
-    };
-  }
+export async function updateUserDetailsAction(formData: IUpdateUserDetailsFormData): Promise<IActionResultExtended> {
+  // Make sure user is logged in
+  const unauthorized = await checkSignedIn();
+  if (unauthorized) { return unauthorized; }
   
-  try {
-    await updateUserDetailsFormDataSchema.parseAsync(formData);
-  } catch {
-    return {
-      message: "Ogiltig data. Kontrollera att uppgifter är korrekta",
-    };
-  }
+  // Do some initial validation of data
+  try { await updateUserDetailsFormDataSchema.parseAsync(formData); }
+  catch { return genericValidationErrorResult(); }
 
-  await updateUserDetails(user.id, formData);
-  return redirect("/");
+  // TODO: We should ideally not fetch user here again.
+  // Instead we should return the one used when determining if signed in or not
+  const { user } = await getCurrentSession();
+  const success = await updateUserDetails(user!.id, formData);
+
+  if (success) { return genericSuccesResult("Ditt konto har uppdaterats"); }
+  return genericErrorResult();
 }
