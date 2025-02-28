@@ -6,14 +6,17 @@ import classes from './SignedInLayout.module.css';
 import Image from 'next/image';
 import Link from 'next/link';
 import { SignOutButton } from '@/ui/SignOutButton';
-import { ROUTE_SETTINGS, ROUTE_SETTINGS_ACCOUNT, ROUTE_SETTINGS_INVITATIONS } from '@/lib/client/constants';
+import { ROUTE_SETTINGS, ROUTE_SETTINGS_ACCOUNT, ROUTE_SETTINGS_ADMIN, ROUTE_SETTINGS_INVITATIONS } from '@/lib/client/constants';
 import { usePathname } from 'next/navigation';
+import { ShowForUserRoles } from '../ShowForUserRoles';
+import { ReactNode } from 'react';
+import { IUser } from '@/lib/server/user';
 
-export default function SignedInLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+interface Props {
+  children: ReactNode | ReactNode[];
+  user: IUser;
+}
+export default function SignedInLayout({ children, user }: Props) {
   const [drawerOpened, { toggle: toggleDrawer, close: closeDrawer }] = useDisclosure(false);
   const colorScheme = useColorScheme();
   const pathname = usePathname();
@@ -34,20 +37,21 @@ export default function SignedInLayout({
             <Group h="100%" gap={0} visibleFrom="sm">
               <Link
                 href={ROUTE_SETTINGS_ACCOUNT}
-                className={pathname.startsWith(ROUTE_SETTINGS_ACCOUNT)
-                  ? [classes.link, classes.linkActive].join(" ")
-                  : classes.link
-                }>
+                className={pathname.startsWith(ROUTE_SETTINGS_ACCOUNT) ? [classes.link, classes.linkActive].join(" ") : classes.link}>
                 Mitt konto
               </Link>
               <Link
                 href={ROUTE_SETTINGS_INVITATIONS}
-                className={pathname.startsWith(ROUTE_SETTINGS_INVITATIONS)
-                  ? [classes.link, classes.linkActive].join(" ")
-                  : classes.link
-                }>
+                className={pathname.startsWith(ROUTE_SETTINGS_INVITATIONS) ? [classes.link, classes.linkActive].join(" ") : classes.link}>
                 Förfrågningar
               </Link>
+              <ShowForUserRoles user={user} roles={["super_admin"]}>
+                <Link
+                  href={ROUTE_SETTINGS_ADMIN}
+                  className={pathname.startsWith(ROUTE_SETTINGS_ADMIN) ? [classes.link, classes.linkActive].join(" ") : classes.link}>
+                  Admin
+                </Link>
+              </ShowForUserRoles>
             </Group>
             <Group visibleFrom="sm">
               <SignOutButton />

@@ -4,7 +4,7 @@ import { SettingsAccountForm } from "@/ui/SettingsAccountForm";
 import { Center } from "@mantine/core";
 import Link from "next/link";
 
-export default async function SettingsSessionsPage() {
+export default async function AccountPage() {
   const { user } = await getCurrentSession();
   return (
     <>

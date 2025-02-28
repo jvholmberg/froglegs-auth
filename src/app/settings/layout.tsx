@@ -22,7 +22,7 @@ export default async function SettingsLayout({
   }
 
   return (
-    <SignedInLayout>
+    <SignedInLayout user={user}>
       {children}
     </SignedInLayout>
   );
