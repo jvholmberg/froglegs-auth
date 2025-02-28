@@ -3,7 +3,6 @@ import "server-only";
 /********************************************************************************/
 
 import { encodeBase32UpperCaseNoPadding } from "@oslojs/encoding";
-import { ERR_NOT_SIGNED_IN, ERR_NO_ACCOUNT, ERR_VALIDATION } from "./constants";
 import { getCurrentSession } from "./session";
 import { IActionResultExtended } from "@/actions/types";
 
@@ -21,52 +20,6 @@ export function generateRandomRecoveryCode(): string {
 	return recoveryCode;
 }
 
-export async function checkSignedIn(): Promise<IActionResultExtended | undefined> {
-  const { session, user } = await getCurrentSession();
-  if (session === null) {
-    return {
-      error: new Error(),
-      notification: {
-        color: "red",
-        title: "Något gick fel!",
-        message: ERR_NOT_SIGNED_IN,
-      }
-    };
-  }
-  if (user === null) {
-    return {
-      error: new Error(),
-      notification: {
-        color: "red",
-        title: "Någt gick fel!",
-        message: ERR_NO_ACCOUNT,
-      }
-    };
-  }
-}
-
-export function genericValidationErrorResult(): IActionResultExtended {
-  return {
-    error: new Error(),
-    notification: {
-      color: "red",
-      title: "Något gick fel!",
-      message: ERR_VALIDATION,
-    }
-  };
-}
-
-export function genericErrorResult(): IActionResultExtended {
-  return {
-    error: new Error(),
-    notification: {
-      color: "red",
-      title: "Ops! Något gick fel!",
-      message: "Ett okänt fel inträffade",
-    }
-  };
-}
-
 export function genericSuccesResult(message: string): IActionResultExtended {
   return {
     error: undefined,
@@ -76,4 +29,93 @@ export function genericSuccesResult(message: string): IActionResultExtended {
       message,
     }
   };
+}
+
+export function genericTooManyRequestsResult(): IActionResultExtended {
+  return {
+    error: new Error(),
+    notification: {
+      color: "red",
+      title: "Något gick fel!",
+      message: "För många anrop. Vänta en stund innan du försöker på nytt",
+    }
+  };
+}
+
+export function genericValidationErrorResult(): IActionResultExtended {
+  return {
+    error: new Error(),
+    notification: {
+      color: "red",
+      title: "Något gick fel!",
+      message: "Validering av data misslyckades",
+    }
+  };
+}
+
+export function genericErrorResult(message?: string): IActionResultExtended {
+  return {
+    error: new Error(),
+    notification: {
+      color: "red",
+      title: "Ops! Något gick fel!",
+      message: message || "Ett okänt fel inträffade",
+    }
+  };
+}
+
+export function genericNoAccountErrorResult(): IActionResultExtended {
+  return {
+    error: new Error(),
+    notification: {
+      color: "red",
+      title: "Något gick fel!",
+      message: "Inget konto kunde hittas",
+    }
+  };
+}
+
+export function genericNotLoggedInErrorResult(): IActionResultExtended {
+  return {
+    error: new Error(),
+    notification: {
+      color: "red",
+      title: "Något gick fel!",
+      message: "Du är inte inloggad",
+    }
+  };
+}
+
+export function genericForbiddenErrorResult(): IActionResultExtended {
+  return {
+    error: new Error(),
+    notification: {
+      color: "red",
+      title: "Något gick fel!",
+      message: "Du saknar behörighet",
+    }
+  };
+}
+
+export async function checkSignedIn(options: {
+  emailVerified?: boolean;
+  twoFactorVerified?: boolean;
+}): Promise<IActionResultExtended | undefined> {
+  const { session, user } = await getCurrentSession();
+  if (session === null) {
+    return genericNotLoggedInErrorResult();
+  }
+  if (user === null) {
+    return genericNoAccountErrorResult();
+  }
+  // Additional checks
+  if (options) {
+    const { emailVerified, twoFactorVerified } = options;
+    if (emailVerified && !user.emailVerified) {
+      return genericForbiddenErrorResult();
+    }
+    if (twoFactorVerified && user.registered2FA && session.twoFactorVerified) {
+      return genericForbiddenErrorResult();
+    }
+  }
 }

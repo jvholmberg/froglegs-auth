@@ -7,9 +7,10 @@ import { encodeBase64 } from "@oslojs/encoding";
 import { createTOTPKeyURI } from "@oslojs/otp";
 import { renderSVG } from "uqr";
 import { TwoFactorSetupForm } from "@/ui/TwoFactorSetupForm";
-import { ROUTE_2FA, ROUTE_SIGN_IN, ROUTE_VERIFY_EMAIL, TOTP_DISPLAY_NAME } from "@/lib/client/constants";
+import { ROUTE_2FA, ROUTE_SETTINGS, ROUTE_SIGN_IN, ROUTE_VERIFY_EMAIL, TOTP_DISPLAY_NAME } from "@/lib/client/constants";
 
 import classes from "./page.module.css";
+import Link from "next/link";
 
 export default async function TwoFactorSetupPage() {
   const belowRateLimit = await globalGETRateLimit();
@@ -53,6 +54,9 @@ export default async function TwoFactorSetupPage() {
         </div>
       </Center>
 			<TwoFactorSetupForm encodedTOTPKey={encodedTOTPKey} />
+      <Center pt="md">
+        <Link href={ROUTE_SETTINGS}>Sätt upp senare</Link>
+      </Center>
 		</>
 	);
 }

@@ -4,6 +4,7 @@ import { TextInput, Button } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { ITwoFactorSetupFormData, twoFactorSetupFormDataSchema } from "@/actions/2fa/schema";
 import { setup2FAAction } from "@/actions/2fa";
+import { notifications } from "@mantine/notifications";
 
 export function TwoFactorSetupForm(props: { encodedTOTPKey: string }) {
 	const form = useForm<ITwoFactorSetupFormData>({
@@ -29,7 +30,8 @@ export function TwoFactorSetupForm(props: { encodedTOTPKey: string }) {
   });
 
   const handleSubmit = async (data: ITwoFactorSetupFormData) => {
-    await setup2FAAction(data);
+    const { notification } = await setup2FAAction(data);
+    notifications.show(notification);
   };
   
 	return (
@@ -48,7 +50,7 @@ export function TwoFactorSetupForm(props: { encodedTOTPKey: string }) {
         placeholder="Ange koden i appen"
         {...form.getInputProps(`code`)} />
       <Button type="submit" fullWidth mt="xl" size="md" color="dark">
-        Sätt upp
+        Koppla ihop
       </Button>
 		</form>
 	);

@@ -15,4 +15,5 @@ export const ROUTE_SETTINGS = "/settings";
 export const ROUTE_SETTINGS_ACCOUNT = "/settings/account";
 export const ROUTE_SETTINGS_INVITATIONS = "/settings/invitations";
 
+export const TWO_FACTOR_MANDATORY = process.env.TWO_FACTOR_MANDATORY === "1";
 export const TOTP_DISPLAY_NAME = process.env.TOTP_DISPLAY_NAME || "Unknown";
