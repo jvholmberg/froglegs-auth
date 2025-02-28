@@ -1,6 +1,6 @@
 import { getMyApps } from "@/lib/server/app"
 import { getCurrentSession } from "@/lib/server/session";
-import { AppTable } from "@/ui/AppTable";
+import { AppList } from "@/ui/AppList";
 
 
 export default async function SettingsPage() {
@@ -8,7 +8,7 @@ export default async function SettingsPage() {
   const apps = await getMyApps(user!);
   return (
     <>
-      <AppTable data={apps} />
+      <AppList data={apps} />
     </>
   )
 }

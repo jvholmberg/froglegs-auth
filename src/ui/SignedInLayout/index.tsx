@@ -25,6 +25,7 @@ export default function SignedInLayout({
           <Group justify="space-between" h="100%">
             <Link href={ROUTE_SETTINGS}>
               <Image
+                className={classes.logo}
                 src={colorScheme === 'dark' ? "/logo_neg.png" : "/logo.jpg"}
                 alt="Kaxig - Creative web solutions"
                 height={41}
@@ -85,7 +86,7 @@ export default function SignedInLayout({
       </main>
       <div className={classes.footer}>
         <Container className={classes.inner}>
-          <Box className={classes.links} p="md">
+          <Box p="md">
             <Title order={5}>Kaxig AB</Title>
             <Text>Drivågatan 11, 343 34 Älmhult</Text>
             <Text>Tfn. 0476-515 99</Text>

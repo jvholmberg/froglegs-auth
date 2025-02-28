@@ -9,7 +9,7 @@ interface Props {
   data: IApp[];
 }
 
-export function AppTable({ data }: Props) {
+export function AppList({ data }: Props) {
 
   const rows = data.map((row, index) => (
     <TableTr key={`${row.name}_${index}`}>

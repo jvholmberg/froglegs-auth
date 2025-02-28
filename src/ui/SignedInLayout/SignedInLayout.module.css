@@ -11,11 +11,8 @@
   border-bottom: 1px solid light-dark(var(--mantine-color-gray-3), var(--mantine-color-dark-4));
 }
 
-.main {
-  flex: 1;
-  margin: 0 auto;
-  max-width: 720px;
-  width: 100%;
+.logo {
+  display: block;
 }
 
 .link {
@@ -41,6 +38,13 @@
 
 .linkActive {
   background-color: light-dark(var(--mantine-color-gray-0), var(--mantine-color-dark-6));
+}
+
+.main {
+  flex: 1;
+  margin: 0 auto;
+  max-width: 720px;
+  width: 100%;
 }
 
 .footer {
