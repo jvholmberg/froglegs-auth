@@ -25,7 +25,7 @@ export default async function ResetPasswordPage() {
 	}
 	return (
     <>
-      <Title order={2} className={classes.title} ta="center" mt="md" mb={50}>
+      <Title order={2} className={classes.title} ta="center" mt="md" mb={50} fw={100}>
         Välj nytt lösenord
       </Title>
 			<PasswordResetForm />

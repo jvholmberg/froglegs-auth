@@ -8,6 +8,7 @@ import { ROUTE_2FA_RESET, ROUTE_2FA_SETUP, ROUTE_SETTINGS, ROUTE_SIGN_IN, ROUTE_
 import { Title, Text, Center } from "@mantine/core";
 
 import classes from "./page.module.css";
+import { SignOutLink } from "@/ui/SignOutLink";
 
 export default async function TwoFactorPage() {
   const belowRateLimit = await globalGETRateLimit();
@@ -29,7 +30,7 @@ export default async function TwoFactorPage() {
 	}
 	return (
     <>
-      <Title order={2} className={classes.title} ta="center" mt="md" mb={50}>
+      <Title order={2} className={classes.title} ta="center" mt="md" mb={50} fw={100}>
         2-faktors autentisering
       </Title>
 
@@ -41,6 +42,11 @@ export default async function TwoFactorPage() {
         <Text component={Link} td="underline" href={ROUTE_2FA_RESET}>
           Ange din återställningskod
         </Text>
+      </Center>
+      <Center mt="md">
+        <SignOutLink>
+          Tillbaka
+        </SignOutLink>
       </Center>
     </>
 	);

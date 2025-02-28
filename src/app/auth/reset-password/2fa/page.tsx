@@ -29,7 +29,7 @@ export default async function ResetPasswordTwoFactorPage() {
 	}
 	return (
 		<>
-      <Title order={2} className={classes.title} ta="center" mt="md" mb={50}>
+      <Title order={2} className={classes.title} ta="center" mt="md" mb={50} fw={100}>
         2-faktors autentisering!
       </Title>
       <Text ta="center" mt="md">
@@ -37,7 +37,7 @@ export default async function ResetPasswordTwoFactorPage() {
       </Text>
 			<PasswordResetTOTPForm />
 			<Box mt={50}>
-        <Title order={2} className={classes.title} ta="center" mt="md" mb={50}>
+        <Title order={2} className={classes.title} ta="center" mt="md" mb={50} fw={100}>
           Använd din återställningskod istället!
         </Title>
 				<PasswordResetRecoveryCodeForm />

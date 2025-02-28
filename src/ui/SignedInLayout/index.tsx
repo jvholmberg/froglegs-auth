@@ -1,6 +1,6 @@
 "use client";
 
-import { ActionIcon, Box, Burger, Container, Divider, Drawer, Group, ScrollArea, Title, Text } from '@mantine/core';
+import { Box, Burger, Container, Divider, Drawer, Group, ScrollArea, Title, Text } from '@mantine/core';
 import { useColorScheme, useDisclosure } from '@mantine/hooks';
 import classes from './SignedInLayout.module.css';
 import Image from 'next/image';

@@ -35,7 +35,7 @@ export default async function TwoFactorSetupPage() {
 	const qrcode = renderSVG(keyURI);
 	return (
 		<>
-      <Title order={2} className={classes.title} ta="center" mt="md" mb={50}>
+      <Title order={2} className={classes.title} ta="center" mt="md" mb={50} fw={100}>
         Sätt upp 2-faktors autentisering
       </Title>
 

@@ -14,7 +14,7 @@ export default async function ForgotPasswordPage() {
 	}
 	return (
 		<>
-    <Title order={2} className={classes.title} ta="center" mt="md" mb={50}>
+    <Title order={2} className={classes.title} ta="center" mt="md" mb={50} fw={100}>
       Glömt ditt lösenord?
     </Title>
 			<ForgotPasswordForm />

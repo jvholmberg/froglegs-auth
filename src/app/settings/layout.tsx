@@ -15,7 +15,9 @@ export default async function SettingsLayout({
   if (!user.emailVerified) {
     return redirect(ROUTE_VERIFY_EMAIL);
   }
-  if (TWO_FACTOR_MANDATORY && !user.registered2FA) {
+  const twoFaNotRegistered = TWO_FACTOR_MANDATORY && !user.registered2FA;
+  const userSessionNotVerified = user.registered2FA && !session.twoFactorVerified;
+  if (twoFaNotRegistered || userSessionNotVerified) {
     return redirect(ROUTE_2FA_SETUP);
   }
 

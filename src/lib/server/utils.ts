@@ -97,10 +97,7 @@ export function genericForbiddenErrorResult(): IActionResultExtended {
   };
 }
 
-export async function checkSignedIn(options: {
-  emailVerified?: boolean;
-  twoFactorVerified?: boolean;
-}): Promise<IActionResultExtended | undefined> {
+export async function checkSignedIn(): Promise<IActionResultExtended | undefined> {
   const { session, user } = await getCurrentSession();
   if (session === null) {
     return genericNotLoggedInErrorResult();
@@ -108,14 +105,10 @@ export async function checkSignedIn(options: {
   if (user === null) {
     return genericNoAccountErrorResult();
   }
-  // Additional checks
-  if (options) {
-    const { emailVerified, twoFactorVerified } = options;
-    if (emailVerified && !user.emailVerified) {
-      return genericForbiddenErrorResult();
-    }
-    if (twoFactorVerified && user.registered2FA && session.twoFactorVerified) {
-      return genericForbiddenErrorResult();
-    }
+  if (!user.emailVerified) {
+    return genericForbiddenErrorResult();
+  }
+  if (user.registered2FA && !session.twoFactorVerified) {
+    return genericForbiddenErrorResult();
   }
 }

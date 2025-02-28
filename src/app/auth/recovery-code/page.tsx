@@ -30,7 +30,7 @@ export default async function RecoveryCodePage() {
 	const recoveryCode = await getUserRecoverCode(user.id);
 	return (
 		<>
-      <Title order={2} className={classes.title} ta="center" mt="md" mb={50}>
+      <Title order={2} className={classes.title} ta="center" mt="md" mb={50} fw={100}>
         Återställningskod!
       </Title>
       <Text ta="center" mt="md">Din återställningskod är:</Text>
