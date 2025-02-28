@@ -31,7 +31,7 @@ export default async function RecoveryCodePage() {
 	return (
 		<>
       <Title order={2} className={classes.title} ta="center" mt="md" mb={50} fw={100}>
-        Återställningskod!
+        Återställningskod
       </Title>
       <Text ta="center" mt="md">Din återställningskod är:</Text>
       <Text ta="center" fw={700}>{recoveryCode}</Text>

@@ -10,6 +10,7 @@ import { db, passwordResetSessionTable, userAppTable, userDetailsTable, userTabl
 import { TblPasswordResetSession } from "@/lib/server/db/types";
 import { generateRandomOTP } from "@/lib/server/utils";
 import { IUser } from "./user";
+import { sendMail } from "./mail";
 
 export async function createPasswordResetSession(token: string, userId: number, email: string) {
 	const sessionId = encodeHexLowerCase(sha256(new TextEncoder().encode(token)));
@@ -123,7 +124,12 @@ export async function deletePasswordResetSessionTokenCookie() {
 }
 
 export async function sendPasswordResetEmail(email: string, code: string) {
-	console.log(`To ${email}: Your reset code is ${code}`);
+  sendMail({
+    from: "info@kaxig.com",
+    to: email,
+    subject: "Your reset code",
+    text: `Your reset code is ${code}`,
+  });
 }
 
 export type IPasswordResetSessionValidationResult =

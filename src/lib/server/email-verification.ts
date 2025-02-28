@@ -10,6 +10,7 @@ import { TblEmailVerificationRequest } from "@/lib/server/db/types";
 import { generateRandomOTP } from "@/lib/server/utils";
 import { ExpiringTokenBucket } from "@/lib/server/rate-limit";
 import { getCurrentSession } from "@/lib/server/session";
+import { sendMail } from "./mail";
 
 export async function getUserEmailVerificationRequest(userId: number, id: string) {
   const result = await db
@@ -49,7 +50,12 @@ export async function deleteUserEmailVerificationRequest(userId: number){
 }
 
 export function sendVerificationEmail(email: string, code: string): void {
-	console.log(`To ${email}: Your verification code is ${code}`);
+  sendMail({
+    from: "info@kaxig.com",
+    to: email,
+    subject: "Your verification code",
+    text: `Your verification code is ${code}`,
+  });
 }
 
 export async function setEmailVerificationRequestCookie(request: TblEmailVerificationRequest) {

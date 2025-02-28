@@ -1,12 +1,13 @@
-import { ROUTE_FORGOT_PASSWORD, ROUTE_RESET_PASSWORD, ROUTE_RESET_PASSWORD_VERIFY_EMAIL } from "@/lib/client/constants";
+import { ROUTE_FORGOT_PASSWORD, ROUTE_RESET_PASSWORD, ROUTE_RESET_PASSWORD_VERIFY_EMAIL, ROUTE_SIGN_IN } from "@/lib/client/constants";
 import { validatePasswordResetSessionRequest } from "@/lib/server/password-reset";
 import { globalGETRateLimit } from "@/lib/server/request";
 import { PasswordResetRecoveryCodeForm } from "@/ui/PasswordResetRecoveryCodeForm";
 import { PasswordResetTOTPForm } from "@/ui/PasswordResetTotpForm";
-import { Title, Text, Box } from "@mantine/core";
+import { Title, Text, Box, Center } from "@mantine/core";
 import { redirect } from "next/navigation";
 
 import classes from "./page.module.css";
+import Link from "next/link";
 
 export default async function ResetPasswordTwoFactorPage() {
 	const belowRateLimit = await globalGETRateLimit();
@@ -30,7 +31,7 @@ export default async function ResetPasswordTwoFactorPage() {
 	return (
 		<>
       <Title order={2} className={classes.title} ta="center" mt="md" mb={50} fw={100}>
-        2-faktors autentisering!
+        2-faktors autentisering
       </Title>
       <Text ta="center" mt="md">
         Ange koden från din authenticator app.
@@ -38,10 +39,15 @@ export default async function ResetPasswordTwoFactorPage() {
 			<PasswordResetTOTPForm />
 			<Box mt={50}>
         <Title order={2} className={classes.title} ta="center" mt="md" mb={50} fw={100}>
-          Använd din återställningskod istället!
+          Använd din återställningskod istället
         </Title>
 				<PasswordResetRecoveryCodeForm />
 			</Box>
+      <Center mt="md">
+        <Text component={Link} td="underline" fw={700} href={ROUTE_SIGN_IN}>
+          Tillbaka
+        </Text>
+      </Center>
 		</>
 	);
 }

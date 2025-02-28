@@ -29,7 +29,7 @@ export default async function VerifyEmailPage() {
 	return (
     <>
       <Title order={2} className={classes.title} ta="center" mt="md" mb={50} fw={100}>
-        Verifiera din E-post!
+        Verifiera din E-post
       </Title>
 
       <Text ta="center" mt="md">

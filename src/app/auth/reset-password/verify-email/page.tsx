@@ -25,7 +25,7 @@ export default async function ResetPasswordVerifyEmailPage() {
 	return (
 		<>
       <Title order={2} className={classes.title} ta="center" mt="md" mb={50} fw={100}>
-        Verifiera din E-post!
+        Verifiera din E-post
       </Title>
       <Text ta="center" mt="md">
         Vi har skickat en 8-siffrig kod till <b>{session.email}</b>.

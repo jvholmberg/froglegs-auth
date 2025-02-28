@@ -29,7 +29,7 @@ export default async function SignUpPage() {
 	return (
     <>
       <Title order={2} className={classes.title} ta="center" mt="md" mb={50} fw={100}>
-        Skapa konto!
+        Skapa konto
       </Title>
 
       <Text ta="center" mt="md">

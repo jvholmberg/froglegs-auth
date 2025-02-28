@@ -33,6 +33,7 @@
     "dotenv": "^16.4.7",
     "drizzle-orm": "^0.39.3",
     "next": "15.1.6",
+    "nodemailer": "^6.10.0",
     "pg": "^8.13.1",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
@@ -44,6 +45,7 @@
   "devDependencies": {
     "@eslint/eslintrc": "^3",
     "@types/node": "^20",
+    "@types/nodemailer": "^6.4.17",
     "@types/pg": "^8.11.11",
     "@types/react": "^19",
     "@types/react-dom": "^19",
