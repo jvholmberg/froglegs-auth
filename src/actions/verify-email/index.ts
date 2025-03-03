@@ -20,68 +20,51 @@ import { updateUserEmailAndSetEmailAsVerified } from "@/lib/server/user";
 import { redirect } from "next/navigation";
 import { IVerifyEmailFormData, verifyEmailFormDataSchema } from "./schema";
 import { ROUTE_2FA_SETUP, ROUTE_SETTINGS } from "@/lib/client/constants";
-import { IActionResult } from "../types";
+import { IActionResultExtended } from "../types";
+import { genericErrorResult, genericForbiddenErrorResult, genericNotLoggedInErrorResult, genericSuccesResult, genericTooManyRequestsResult, genericValidationErrorResult } from "@/lib/server/utils";
 
 const bucket = new ExpiringTokenBucket<number>(5, 60 * 30);
 
-export async function verifyEmailAction(formData: IVerifyEmailFormData): Promise<IActionResult> {
+export async function verifyEmailAction(formData: IVerifyEmailFormData): Promise<IActionResultExtended> {
   const belowRateLimit = await globalPOSTRateLimit();
   if (!belowRateLimit) {
-    return {
-      message: "För många anrop",
-    };
+    return genericTooManyRequestsResult();
   }
 
 	const { session, user } = await getCurrentSession();
 	if (session === null) {
-		return {
-			message: "Not authenticated"
-		};
+		return genericNotLoggedInErrorResult();
 	}
 
 	if (user.registered2FA && !session.twoFactorVerified) {
-		return {
-			message: "Forbidden"
-		};
+		return genericForbiddenErrorResult();
 	}
 
 	if (!bucket.check(user.id, 1)) {
-		return {
-			message: "Too many requests"
-		};
+    return genericTooManyRequestsResult();
 	}
 
 	let verificationRequest = await getUserEmailVerificationRequestFromRequest();
 	if (verificationRequest === null) {
-		return {
-			message: "Not authenticated"
-		};
+		return genericNotLoggedInErrorResult();
 	}
 
   try {
     await verifyEmailFormDataSchema.parseAsync(formData);
   } catch {
-    return {
-      message: "Ogiltig data. Kontrollera att uppgifter är korrekta",
-    };
+    return genericValidationErrorResult();
   }
 
 	if (!bucket.consume(user.id, 1)) {
-		return {
-			message: "Too many requests"
-		};
+    return genericTooManyRequestsResult();
 	}
 	if (Date.now() >= verificationRequest.expiresAt.getTime()) {
 		verificationRequest = await createEmailVerificationRequest(verificationRequest.userId, verificationRequest.email);
 		sendVerificationEmail(verificationRequest.email, verificationRequest.code);
-		return {
-			message: "The verification code was expired. We sent another code to your inbox."
-		};
+    return genericErrorResult("Verifieringskoden har gått ut. Vi har skickat en ny till din e-post.");
 	}
 	if (verificationRequest.code !== formData.code) {
-		return {
-			message: "Incorrect code."
-		};
+    return genericErrorResult("Felaktig kod!");
 	}
 	await deleteUserEmailVerificationRequest(user.id);
 	await invalidateUserPasswordResetSessions(user.id);
@@ -93,47 +76,33 @@ export async function verifyEmailAction(formData: IVerifyEmailFormData): Promise
 	return redirect(ROUTE_SETTINGS);
 }
 
-export async function resendEmailVerificationCodeAction(): Promise<IActionResult> {
+export async function resendEmailVerificationCodeAction(): Promise<IActionResultExtended> {
 	const { session, user } = await getCurrentSession();
 	if (session === null) {
-		return {
-			message: "Not authenticated"
-		};
+    return genericNotLoggedInErrorResult();
 	}
 	if (user.registered2FA && !session.twoFactorVerified) {
-		return {
-			message: "Forbidden"
-		};
+    return genericForbiddenErrorResult();
 	}
 	if (!sendVerificationEmailBucket.check(user.id, 1)) {
-		return {
-			message: "Too many requests"
-		};
+    return genericTooManyRequestsResult();
 	}
 	let verificationRequest = await getUserEmailVerificationRequestFromRequest();
 	if (verificationRequest === null) {
 		if (user.emailVerified) {
-			return {
-				message: "Forbidden"
-			};
+      return genericForbiddenErrorResult();
 		}
 		if (!sendVerificationEmailBucket.consume(user.id, 1)) {
-			return {
-				message: "Too many requests"
-			};
+      return genericTooManyRequestsResult();
 		}
 		verificationRequest = await createEmailVerificationRequest(user.id, user.email);
 	} else {
 		if (!sendVerificationEmailBucket.consume(user.id, 1)) {
-			return {
-				message: "Too many requests"
-			};
+      return genericTooManyRequestsResult();
 		}
 		verificationRequest = await createEmailVerificationRequest(user.id, verificationRequest.email);
 	}
 	sendVerificationEmail(verificationRequest.email, verificationRequest.code);
 	await setEmailVerificationRequestCookie(verificationRequest);
-	return {
-		message: "A new code was sent to your inbox."
-	};
+  return genericSuccesResult("En ny kod har skickats till din e-post");
 }

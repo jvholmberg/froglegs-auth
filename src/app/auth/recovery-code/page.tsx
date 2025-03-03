@@ -8,11 +8,12 @@ import { ROUTE_2FA, ROUTE_2FA_SETUP, ROUTE_SETTINGS, ROUTE_SIGN_IN, ROUTE_VERIFY
 import { Title, Text, Button } from "@mantine/core";
 
 import classes from "./page.module.css";
+import { genericTooManyRequestsResult } from "@/lib/server/utils";
 
 export default async function RecoveryCodePage() {
   const belowRateLimit = await globalGETRateLimit();
 	if (!belowRateLimit) {
-		return "Too many requests";
+		return genericTooManyRequestsResult();
 	}
 	const { session, user } = await getCurrentSession();
 	if (session === null) {

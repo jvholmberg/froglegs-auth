@@ -1,6 +1,4 @@
-
-
-import { IUser, UserRole } from "@/lib/server/user";
+import { IUser, UserRole } from "@/lib/server/db/types";
 import { ReactNode } from "react";
 
 interface Props {

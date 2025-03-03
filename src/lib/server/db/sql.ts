@@ -48,8 +48,8 @@ interface IInsertBatchSqlOptions extends IBasicQuerySqlOptions {
   ignore?: boolean;
 }
 
-interface IUpdateSqlOptions<T> extends IBasicQuerySqlOptions {
-  id: number;
+interface IUpdateSqlOptions<T, I = number> extends IBasicQuerySqlOptions {
+  id: I;
   idColumn: string;
   columnData: Partial<T>;
 }
@@ -59,11 +59,6 @@ export const SEPARATORS = {
   group: { sql: "'~'", js: "~" },
   // between items in GROUP_CONCAT, CONCAT or CONCAT_WS
   unit: { sql: "'|'", js: "|" },
-};
-
-const createEmptyRecord = (columns: string[]): any => {
-  const row = columns.reduce((result, value) => ({ ...result, [value]: "" }), { noRecord: true });
-  return row;
 };
 
 /**
@@ -276,7 +271,7 @@ export const insertBatch = async ({
  * @param param0
  * @returns
  */
-export const update = async <T>(options: IUpdateSqlOptions<T>): Promise<number> => {
+export const update = async <T, I = number>(options: IUpdateSqlOptions<T, I>): Promise<I> => {
   const conn = options.connection || await dbPool.getConnection();
 
   try {
@@ -345,11 +340,11 @@ export const query = async <T>(
     }
 
     const rows = await conn.query<T[]>({
-        sql,
-        namedPlaceholders: options?.namedPlaceholders !== undefined
-          ? options.namedPlaceholders
-          : true
-      }, values);
+      sql,
+      namedPlaceholders: options?.namedPlaceholders !== undefined
+        ? options.namedPlaceholders
+        : true
+    }, values);
 
     return rows;
   } catch (err) {
@@ -380,7 +375,7 @@ export const getRecord = async <T>(
   sql: string,
   values: any,
   options?: IQuerySqlOptions,
-): Promise<T & IGetRecord> => {
+): Promise<T | null> => {
   const conn = options?.connection || await dbPool.getConnection();
 
   try {
@@ -390,16 +385,14 @@ export const getRecord = async <T>(
       console.log(`[${options.logLabel} : values] => `, values);
     }
 
-    const [rows, metadata] = await conn.query<[T[], any]>({
+    const rows = await conn.query<T[]>({
       sql,
-      metaAsArray: true,
       namedPlaceholders: true,
     }, values);
-    const columns = metadata.map((e: any) => e.name());
 
     return rows.length
       ? rows[0]
-      : createEmptyRecord(columns);
+      : null;
   } catch (err) {
     // Log
     if (options?.logLabel) {
@@ -456,11 +449,12 @@ export const deleteQuery = async (
   }
 };
 
-export const write = async (callback: (connection: PoolConnection) => Promise<void>) => {
+export const write = async <T = void>(callback: (connection: PoolConnection) => Promise<T>) => {
   const connection = await beginTransaction();
   try {
-    await callback(connection);
+    const ret = await callback(connection);
     await commitTransaction(connection);
+    return ret;
   } catch (err: any) {
     await rollbackTransaction(connection);
     throw err;

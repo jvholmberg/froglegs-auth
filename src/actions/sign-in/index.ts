@@ -5,14 +5,15 @@ import "server-only";
 
 import { verifyPasswordHash } from "@/lib/server/password";
 import { RefillingTokenBucket, Throttler } from "@/lib/server/rate-limit";
-import { createSession, generateSessionToken, ISessionFlags, setSessionTokenCookie } from "@/lib/server/session";
-import { getUserFromEmail, getUserPasswordHash } from "@/lib/server/user";
+import { createSession, generateSessionToken, setSessionTokenCookie } from "@/lib/server/session";
+import { getUser, getUserPasswordHash } from "@/lib/server/user";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { globalPOSTRateLimit } from "@/lib/server/request";
 import { ISignInFormData, signInFormDataSchema } from "./schema";
 import { ROUTE_2FA, ROUTE_2FA_SETUP, ROUTE_VERIFY_EMAIL } from "@/lib/client/constants";
 import { IActionResult } from "../types";
+import { ISessionFlags } from "@/lib/server/db/types";
 
 const throttler = new Throttler<number>([1, 2, 4, 8, 16, 30, 60, 180, 300]);
 const ipBucket = new RefillingTokenBucket<string>(20, 1);
@@ -42,7 +43,7 @@ export async function signInAction(formData: ISignInFormData): Promise<IActionRe
     };
   }
 
-	const user = await getUserFromEmail(formData.email);
+	const user = await getUser({ email: formData.email });
 	if (user === null) {
 		return {
 			message: "Inget konto kunde hittas"

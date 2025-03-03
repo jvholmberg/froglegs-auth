@@ -1,7 +1,6 @@
 "use client";
 
 import { Button } from "@mantine/core";
-import { IAppInvitation } from "@/lib/server/app";
 import { declineAppInvitationFormDataSchema, IDeclineAppInvitationFormData } from "@/actions/invitation/schema";
 import { useForm } from "@mantine/form";
 import { declineAppInvitationAction } from "@/actions/invitation";
@@ -10,6 +9,7 @@ import { useRouter } from "next/navigation";
 import { notifications } from "@mantine/notifications";
 
 import classes from "./DeclineAppInvitationButton.module.css";
+import { IAppInvitation } from "@/lib/server/db/types";
 
 interface Props {
   data: IAppInvitation;

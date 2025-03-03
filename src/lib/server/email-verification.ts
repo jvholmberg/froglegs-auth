@@ -3,27 +3,29 @@ import "server-only";
 /********************************************************************************/
 
 import { cookies } from "next/headers";
-import { and, eq } from "drizzle-orm";
 import { encodeBase32 } from "@oslojs/encoding";
-import { db, emailVerificationRequestTable } from "@/lib/server/db/schema";
-import { TblEmailVerificationRequest } from "@/lib/server/db/types";
+import { IEmailVerificationRequest, TblEmailVerificationRequest } from "@/lib/server/db/types";
 import { generateRandomOTP } from "@/lib/server/utils";
 import { ExpiringTokenBucket } from "@/lib/server/rate-limit";
 import { getCurrentSession } from "@/lib/server/session";
 import { sendMail } from "./mail";
+import * as Database from "@/lib/server/db/sql";
+import { DB } from "./constants";
 
 export async function getUserEmailVerificationRequest(userId: number, id: string) {
-  const result = await db
-    .select()
-    .from(emailVerificationRequestTable)
-    .where(
-      and(
-        eq(emailVerificationRequestTable.id, id),
-        eq(emailVerificationRequestTable.userId, userId)
-      ))
-    .limit(1);
-  const request = result.at(0);
-	return request || null;
+  const result = await Database.getRecord<IEmailVerificationRequest>(`
+    SELECT
+      id,
+      user_id AS userId,
+      email,
+      code,
+      expires_at AS expiresAt
+    WHERE
+      user_id = :userId
+      AND
+      id = :id
+  `, { id, userId });
+	return result;
 }
 
 export async function createEmailVerificationRequest(userId: number, email: string) {
@@ -41,12 +43,25 @@ export async function createEmailVerificationRequest(userId: number, email: stri
     email,
     expiresAt,
   };
-  await db.insert(emailVerificationRequestTable).values(request);
+  await Database.insertSingle<TblEmailVerificationRequest>({
+    db: DB,
+    table: "email_verification_request",
+    columnData: {
+      id: request.id,
+      user_id: request.userId,
+      code: request.code,
+      email: request.email,
+      expires_at: request.expiresAt,
+    },
+  });
 	return request;
 }
 
 export async function deleteUserEmailVerificationRequest(userId: number){
-  await db.delete(emailVerificationRequestTable).where(eq(emailVerificationRequestTable.userId, userId));
+  await Database.deleteQuery(`
+    DELETE FROM ${DB}.email_verification_request
+    WHERE user_id = :userId  
+  `, { userId });
 }
 
 export function sendVerificationEmail(email: string, code: string): void {
@@ -58,7 +73,7 @@ export function sendVerificationEmail(email: string, code: string): void {
   });
 }
 
-export async function setEmailVerificationRequestCookie(request: TblEmailVerificationRequest) {
+export async function setEmailVerificationRequestCookie(request: IEmailVerificationRequest) {
 	const cookieStore = await cookies();
 	cookieStore.set("email_verification", request.id, {
 		httpOnly: true,

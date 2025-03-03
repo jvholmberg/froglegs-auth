@@ -1,11 +1,11 @@
 "use client";
 
-import { IAppInvitation } from "@/lib/server/app";
 import { Table, TableTr, TableTd, TableThead, TableTh, TableTbody, Button } from "@mantine/core";
 import dayjs from "dayjs";
 import { getRoleName } from "@/lib/client/utils";
 import { AcceptAppInvitationButton } from "../AcceptAppInvitationButton";
 import { DeclineAppInvitationButton } from "../DeclineAppInvitationButton";
+import { IAppInvitation } from "@/lib/server/db/types";
 
 interface Props {
   data: IAppInvitation[];

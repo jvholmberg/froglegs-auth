@@ -11,7 +11,7 @@
  Target Server Version : 110502 (11.5.2-MariaDB)
  File Encoding         : 65001
 
- Date: 01/03/2025 12:16:22
+ Date: 03/03/2025 01:15:29
 */
 
 SET NAMES utf8mb4;
@@ -67,7 +67,7 @@ COMMIT;
 -- ----------------------------
 DROP TABLE IF EXISTS `email_verification_request`;
 CREATE TABLE `email_verification_request` (
-  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `id` varchar(100) NOT NULL,
   `user_id` int(10) unsigned NOT NULL,
   `email` varchar(255) NOT NULL,
   `code` varchar(50) NOT NULL,
@@ -184,10 +184,13 @@ CREATE TABLE `user_app` (
   `app_id` int(10) unsigned NOT NULL,
   `external_organization_id` varchar(255) DEFAULT NULL,
   `external_user_id` varchar(255) NOT NULL,
+  `role_id` tinyint(3) unsigned DEFAULT NULL,
   PRIMARY KEY (`user_id`,`app_id`),
   KEY `user_app_ibfk_2` (`app_id`),
+  KEY `user_app_ibfk_3` (`role_id`),
   CONSTRAINT `user_app_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `user` (`id`) ON DELETE CASCADE ON UPDATE NO ACTION,
-  CONSTRAINT `user_app_ibfk_2` FOREIGN KEY (`app_id`) REFERENCES `app` (`id`) ON DELETE NO ACTION ON UPDATE NO ACTION
+  CONSTRAINT `user_app_ibfk_2` FOREIGN KEY (`app_id`) REFERENCES `app` (`id`) ON DELETE CASCADE ON UPDATE NO ACTION,
+  CONSTRAINT `user_app_ibfk_3` FOREIGN KEY (`role_id`) REFERENCES `role` (`id`) ON DELETE SET NULL ON UPDATE NO ACTION
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
 
 -- ----------------------------

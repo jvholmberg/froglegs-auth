@@ -5,8 +5,8 @@ import "server-only";
 import { encodeBase32UpperCaseNoPadding } from "@oslojs/encoding";
 import { getCurrentSession } from "./session";
 import { IActionResultExtended } from "@/actions/types";
-import { IUser, UserAppRole, UserRole } from "./user";
 import { ROUTE_2FA, ROUTE_LANDING, ROUTE_SETTINGS, ROUTE_VERIFY_EMAIL } from "../client/constants";
+import { IUser, UserAppRole, UserRole } from "./db/types";
 
 export function generateRandomOTP(): string {
 	const bytes = new Uint8Array(5);

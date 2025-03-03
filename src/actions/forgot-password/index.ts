@@ -12,7 +12,7 @@ import {
 import { RefillingTokenBucket } from "@/lib/server/rate-limit";
 import { globalPOSTRateLimit } from "@/lib/server/request";
 import { generateSessionToken } from "@/lib/server/session";
-import { getUserFromEmail } from "@/lib/server/user";
+import { getUser } from "@/lib/server/user";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { forgotPasswordFormDataSchema, IForgotPasswordFormData } from "./schema";
@@ -47,7 +47,7 @@ export async function forgotPasswordAction(formData: IForgotPasswordFormData): P
     };
   }
 
-	const user = await getUserFromEmail(formData.email);
+	const user = await getUser({ email: formData.email });
 	if (user === null) {
 		return {
 			message: "Account does not exist"

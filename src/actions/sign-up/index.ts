@@ -17,10 +17,10 @@ import { createSession, generateSessionToken, setSessionTokenCookie } from "@/li
 import { createUser } from "@/lib/server/user";
 import { globalPOSTRateLimit } from "@/lib/server/request";
 
-import type { ISessionFlags } from "@/lib/server/session";
 import { ISignUpFormData, signUpFormDataSchema } from "./schema";
 import { ROUTE_2FA_SETUP } from "@/lib/client/constants";
 import { IActionResult } from "../types";
+import { ISessionFlags } from "@/lib/server/db/types";
 
 const ipBucket = new RefillingTokenBucket<string>(3, 10);
 

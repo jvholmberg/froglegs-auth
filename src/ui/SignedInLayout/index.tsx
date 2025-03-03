@@ -10,7 +10,7 @@ import { ROUTE_SETTINGS, ROUTE_SETTINGS_ACCOUNT, ROUTE_SETTINGS_ADMIN, ROUTE_SET
 import { usePathname } from 'next/navigation';
 import { ShowForUserRoles } from '../ShowForUserRoles';
 import { ReactNode } from 'react';
-import { IUser } from '@/lib/server/user';
+import { IUser } from '@/lib/server/db/types';
 
 interface Props {
   children: ReactNode | ReactNode[];

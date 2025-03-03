@@ -1,4 +1,4 @@
-import { UserAppRole, UserRole } from "../server/user";
+import { UserRole, UserAppRole } from "@/lib/server/db/types";
 
 export function getRoleName(role: UserRole | UserAppRole | undefined | null) {
   switch (role) {

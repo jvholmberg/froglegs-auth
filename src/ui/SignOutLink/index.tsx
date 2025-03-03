@@ -3,7 +3,6 @@
 import { signoutAction } from "@/actions/sign-out";
 import { Button } from "@mantine/core";
 import { ReactNode, useActionState } from "react";
-import { useColorScheme } from "@mantine/hooks";
 
 const initialState = {
 	message: ""

@@ -15,7 +15,6 @@ import {
 	createSession,
 	generateSessionToken,
 	invalidateUserSessions,
-	ISessionFlags,
 	setSessionTokenCookie
 } from "@/lib/server/session";
 import { getUserTOTPKey, setUserAsEmailVerifiedIfEmailMatches, updateUserPassword } from "@/lib/server/user";
@@ -35,7 +34,9 @@ import { ExpiringTokenBucket } from "@/lib/server/rate-limit";
 import { recoveryCodeBucket, resetUser2FAWithRecoveryCode, totpBucket } from "@/lib/server/2fa";
 import { verifyTOTP } from "@oslojs/otp";
 import { ROUTE_SETTINGS, ROUTE_RESET_PASSWORD, ROUTE_RESET_PASSWORD_2FA } from "@/lib/client/constants";
-import { IActionResult } from "../types";
+import { IActionResult, IActionResultExtended } from "../types";
+import { ISessionFlags } from "@/lib/server/db/types";
+import { genericErrorResult, genericForbiddenErrorResult, genericNotLoggedInErrorResult, genericTooManyRequestsResult, genericValidationErrorResult } from "@/lib/server/utils";
 
 const emailVerificationBucket = new ExpiringTokenBucket<number>(5, 60 * 30);
 
@@ -195,49 +196,35 @@ export async function verifyPasswordReset2FAWithTOTPAction(formData: IPasswordRe
 	return redirect(ROUTE_RESET_PASSWORD);
 }
 
-export async function verifyPasswordReset2FAWithRecoveryCodeAction(formData: IPasswordResetRecoveryCodeFormData): Promise<IActionResult> {
+export async function verifyPasswordReset2FAWithRecoveryCodeAction(formData: IPasswordResetRecoveryCodeFormData): Promise<IActionResultExtended> {
 	const belowRateLimit = await globalPOSTRateLimit();
   if (!belowRateLimit) {
-		return {
-			message: "Too many requests"
-		};
+    return genericTooManyRequestsResult();
 	}
 	const { session, user } = await validatePasswordResetSessionRequest();
 	if (session === null) {
-		return {
-			message: "Not authenticated"
-		};
+    return genericNotLoggedInErrorResult();
 	}
 	if (!session.emailVerified || !user.registered2FA || session.twoFactorVerified) {
-		return {
-			message: "Forbidden"
-		};
+		return genericForbiddenErrorResult();
 	}
 
 	if (!recoveryCodeBucket.check(session.userId, 1)) {
-		return {
-			message: "Too many requests"
-		};
+    return genericTooManyRequestsResult();
 	}
 
   try {
     await passwordResetRecoveryCodeFormDataSchema.parseAsync(formData);
   } catch {
-    return {
-      message: "Ogiltig data. Kontrollera att uppgifter är korrekta",
-    };
+    return genericValidationErrorResult()
   }
 
 	if (!recoveryCodeBucket.consume(session.userId, 1)) {
-		return {
-			message: "Too many requests"
-		};
+    return genericTooManyRequestsResult();
 	}
 	const valid = await resetUser2FAWithRecoveryCode(session.userId, formData.code);
 	if (!valid) {
-		return {
-			message: "Invalid code"
-		};
+    return genericErrorResult("Ogiltig kod");
 	}
 	recoveryCodeBucket.reset(session.userId);
 	return redirect(ROUTE_RESET_PASSWORD);

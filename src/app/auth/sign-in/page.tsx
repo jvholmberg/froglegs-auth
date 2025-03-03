@@ -7,11 +7,12 @@ import { redirect } from "next/navigation";
 
 import classes from "./page.module.css";
 import { ROUTE_2FA, ROUTE_2FA_SETUP, ROUTE_FORGOT_PASSWORD, ROUTE_SETTINGS, ROUTE_SIGN_UP, ROUTE_VERIFY_EMAIL } from "@/lib/client/constants";
+import { genericTooManyRequestsResult } from "@/lib/server/utils";
 
 export default async function SignInPage() {
   const belowRateLimit = await globalGETRateLimit();
 	if (!belowRateLimit) {
-		return "För många anrop";
+		return genericTooManyRequestsResult();
 	}
 	const { session, user } = await getCurrentSession();
 	if (session !== null) {

@@ -7,19 +7,16 @@ import { globalPOSTRateLimit } from "@/lib/server/request";
 import { getCurrentSession, invalidateSession, deleteSessionTokenCookie } from "@/lib/server/session";
 import { redirect } from "next/navigation";
 import { ROUTE_SIGN_IN } from "@/lib/client/constants";
-import { IActionResult } from "../types";
+import { IActionResultExtended } from "../types";
+import { genericNotLoggedInErrorResult, genericTooManyRequestsResult } from "@/lib/server/utils";
 
-export async function signoutAction(): Promise<IActionResult> {
+export async function signoutAction(): Promise<IActionResultExtended> {
 	if (!globalPOSTRateLimit()) {
-		return {
-			message: "Too many requests"
-		};
+    return genericTooManyRequestsResult();
 	}
 	const { session } = await getCurrentSession();
 	if (session === null) {
-		return {
-			message: "Not authenticated"
-		};
+		return genericNotLoggedInErrorResult();
 	}
 	await invalidateSession(session.id);
 	await deleteSessionTokenCookie();
