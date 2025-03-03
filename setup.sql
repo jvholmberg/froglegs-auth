@@ -11,7 +11,7 @@
  Target Server Version : 110502 (11.5.2-MariaDB)
  File Encoding         : 65001
 
- Date: 03/03/2025 10:32:02
+ Date: 03/03/2025 15:46:17
 */
 
 SET NAMES utf8mb4;
@@ -48,11 +48,12 @@ CREATE TABLE `app_invitation` (
   `app_id` int(10) unsigned NOT NULL,
   `external_organization_id` varchar(255) DEFAULT NULL,
   `external_id` varchar(255) NOT NULL,
-  `role` tinyint(4) DEFAULT NULL,
+  `role` varchar(20) DEFAULT NULL,
   `email` varchar(255) NOT NULL,
   `expires_at` datetime DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `app_id` (`app_id`),
+  KEY `email` (`email`) USING BTREE,
   CONSTRAINT `app_invitation_ibfk_1` FOREIGN KEY (`app_id`) REFERENCES `app` (`id`) ON DELETE CASCADE ON UPDATE NO ACTION
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
 
