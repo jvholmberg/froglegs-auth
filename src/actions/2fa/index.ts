@@ -48,6 +48,7 @@ export async function setup2FAAction(formData: ITwoFactorSetupFormData): Promise
 	if (!totpUpdateBucket.consume(user.id, 1)) { return genericTooManyRequestsResult(); }
 	if (!verifyTOTP(key, 30, 6, formData.code)) { return genericErrorResult("Ogiltig kod"); }
 
+  console.log("kuken")
 	await updateUserTOTPKey(session.userId, key);
 	await setSessionAs2FAVerified(session.id);
 	return redirect(ROUTE_RECOVERY_CODE);

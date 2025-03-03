@@ -1,6 +1,6 @@
 "use client";
 
-import { Table, TableTr, TableTd, TableThead, TableTh, TableTbody, Button } from "@mantine/core";
+import { Table, TableTr, TableTd, TableThead, TableTh, TableTbody, Text } from "@mantine/core";
 import dayjs from "dayjs";
 import { getRoleName } from "@/lib/client/utils";
 import { AcceptAppInvitationButton } from "../AcceptAppInvitationButton";
@@ -15,8 +15,10 @@ export function AppInvitationList({ data }: Props) {
 
   const rows = data.map((row) => (
     <TableTr key={row.id}>
-      <TableTd valign="top" fz="md">{row.appName}</TableTd>
-      <TableTd valign="top">{row.appDescription}</TableTd>
+      <TableTd valign="top">
+        <Text>{row.appName}</Text>
+        <Text fz="xs">{row.appDescription}</Text>
+      </TableTd>
       <TableTd valign="top">{getRoleName(row.role)}</TableTd>
       <TableTd valign="top">{row.expiresAt ? dayjs(row.expiresAt).format("YYYY-MM-DD HH:mm") : ""}</TableTd>
       <TableTd valign="top" ta="right">
@@ -30,8 +32,7 @@ export function AppInvitationList({ data }: Props) {
     <Table verticalSpacing="md">
       <TableThead>
         <TableTr>
-          <TableTh>Namn</TableTh>
-          <TableTh>Beskrivning</TableTh>
+          <TableTh>App</TableTh>
           <TableTh>Roll</TableTh>
           <TableTh>Giltighetstid</TableTh>
           <TableTh></TableTh>

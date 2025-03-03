@@ -1,6 +1,6 @@
 import { getCurrentSession } from "./session";
 import dayjs from "dayjs";
-import { IAppInvitation, IAppUser, IUser, TblRole, TblUserApp, UserAppRole } from "./db/types";
+import { IApp, IAppInvitation, IAppUser, IUser, TblRole, TblUserApp, UserAppRole } from "./db/types";
 import * as Database from "@/lib/server/db/sql";
 import { DB } from "./constants";
 
@@ -44,18 +44,18 @@ export async function acceptAppInvitation(id: number, user: IUser): Promise<bool
   // Find app-invitation
   const invitation = await Database.getRecord<IAppInvitation>(`
     SELECT
-      api.id AS id,
-      api.app_id AS appId,
-      api.role AS role,
-      api.external_organization_id AS externalOrganizationId,
-      api.external_id AS externalId, 
-      api.email AS email, 
-      api.expires_at AS expiresAt,
+      id AS id,
+      app_id AS appId,
+      role AS role,
+      external_organization_id AS externalOrganizationId,
+      external_id AS externalId, 
+      email AS email, 
+      expires_at AS expiresAt
     FROM ${DB}.app_invitation
     WHERE
-      api.id = :id
+      id = :id
       AND
-      api.email = :email
+      email = :email
   `, { id, email: user.email });
 
   // No invitation found
@@ -139,18 +139,22 @@ export async function getMyAppInvitations(): Promise<IAppInvitation[]> {
   }
   const result = await Database.query<IAppInvitation>(`
     SELECT
-      id AS id,
-      app_id AS appId,
-      role as role,
-      external_organization_id AS externalOrganizationId,
-      external_id AS externalId, 
-      email AS email, 
-      expires_at AS expiresAt,
-    FROM ${DB}.app_invitation
+      api.id,
+      api.app_id AS appId,
+      app.name AS appName,
+      app.description AS appDescription,
+      api.external_organization_id AS externalOrganizationId,
+      api.external_id AS externalId, 
+      api.role,
+      api.email, 
+      api.expires_at AS expiresAt
+    FROM ${DB}.app_invitation AS api
+    INNER JOIN ${DB}.app AS app
+      ON api.app_id = app.id
     WHERE
       email = :email
 
-  `, { email: user?.email });
+  `, { email: user.email });
 
 	return result;
 }
@@ -216,12 +220,4 @@ export async function getAppUsersForOrganization(appId: number, externalOrganiza
       external_organization_id = :externalOrganizationId
   `, { appId, externalOrganizationId });
 	return result;
-}
-
-export interface IApp {
-  id: number;
-  code: string;
-  url: string;
-  name: string;
-  description: string;
 }

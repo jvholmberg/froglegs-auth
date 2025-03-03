@@ -3,7 +3,7 @@ import "server-only";
 /********************************************************************************/
 
 import { cookies } from "next/headers";
-import { encodeBase32 } from "@oslojs/encoding";
+import { encodeBase32, encodeBase32LowerCase } from "@oslojs/encoding";
 import { IEmailVerificationRequest, TblEmailVerificationRequest } from "@/lib/server/db/types";
 import { generateRandomOTP } from "@/lib/server/utils";
 import { ExpiringTokenBucket } from "@/lib/server/rate-limit";
@@ -20,6 +20,7 @@ export async function getUserEmailVerificationRequest(userId: number, id: string
       email,
       code,
       expires_at AS expiresAt
+    FROM ${DB}.email_verification_request
     WHERE
       user_id = :userId
       AND
@@ -32,7 +33,7 @@ export async function createEmailVerificationRequest(userId: number, email: stri
 	await deleteUserEmailVerificationRequest(userId);
 	const idBytes = new Uint8Array(20);
 	crypto.getRandomValues(idBytes);
-	const id = encodeBase32(idBytes).toLowerCase();
+	const id = encodeBase32LowerCase(idBytes);
 
 	const code = generateRandomOTP();
 	const expiresAt = new Date(Date.now() + 1000 * 60 * 10);

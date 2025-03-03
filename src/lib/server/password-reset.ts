@@ -52,6 +52,7 @@ export async function validatePasswordResetSessionToken(token: string): Promise<
       expires_at AS expiresAt,
       email_verified AS emailVerified,
       two_factor_verified AS twoFactorVerified
+    FROM ${DB}.password_reset_session
     WHERE
       id = :sessionId
   `, { sessionId });
@@ -59,19 +60,6 @@ export async function validatePasswordResetSessionToken(token: string): Promise<
   if (!user || !session) {
     return { session: null, user: null };
   }
-
-  // Since we get app-related data as string we must map it to a more useful format
-  user.apps = (user.apps as unknown as string)
-    .split(Database.SEPARATORS.group.js)
-    .map((e) => {
-      const val = e.split(Database.SEPARATORS.unit.js);
-      return {
-        appId: Number(val[0]),
-        externalOrganizationId: val[1],
-        externalId: val[2],
-        role: val[3] as UserAppRole,
-      };
-    });
     
   // If session has expired we delete it and return null
   if (Date.now() >= session.expiresAt.getTime()) {

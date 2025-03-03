@@ -20,7 +20,7 @@ export interface TblAppInvitation {
   id: number;
   app_id: number;
   external_organization_id: string | null;
-  external_user_id: string;
+  external_id: string;
   role: UserAppRole | null;
   email: string;
   expires_at: Date | null;
@@ -75,6 +75,14 @@ export interface TblEmailVerificationRequest {
   expires_at: Date;
 }
 
+export interface IApp {
+  id: number;
+  code: string;
+  url: string | null;
+  name: string | null;
+  description: string | null;
+}
+
 export interface IUserAppItem {
   appId: number;
   externalOrganizationId: string | null;
@@ -93,6 +101,8 @@ export interface IAppUser {
 export interface IAppInvitation {
   id: number;
   appId: number;
+  appName: string | null;
+  appDescription: string | null;
   externalOrganizationId: string | null;
   externalId: string;
   role: UserAppRole | null;

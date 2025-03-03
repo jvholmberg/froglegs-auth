@@ -11,7 +11,7 @@
  Target Server Version : 110502 (11.5.2-MariaDB)
  File Encoding         : 65001
 
- Date: 03/03/2025 01:15:29
+ Date: 03/03/2025 10:32:02
 */
 
 SET NAMES utf8mb4;
@@ -47,7 +47,7 @@ CREATE TABLE `app_invitation` (
   `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
   `app_id` int(10) unsigned NOT NULL,
   `external_organization_id` varchar(255) DEFAULT NULL,
-  `external_user_id` varchar(255) NOT NULL,
+  `external_id` varchar(255) NOT NULL,
   `role` tinyint(4) DEFAULT NULL,
   `email` varchar(255) NOT NULL,
   `expires_at` datetime DEFAULT NULL,
@@ -162,7 +162,7 @@ CREATE TABLE `user` (
   `email_verified` tinyint(1) NOT NULL DEFAULT 0,
   `totp_key` blob DEFAULT NULL,
   `recovery_code` blob NOT NULL,
-  `role_id` tinyint(4) unsigned DEFAULT NULL,
+  `role_id` tinyint(4) unsigned DEFAULT 5,
   PRIMARY KEY (`id`),
   UNIQUE KEY `email` (`email`) USING BTREE,
   KEY `role_id` (`role_id`),
@@ -183,7 +183,7 @@ CREATE TABLE `user_app` (
   `user_id` int(10) unsigned NOT NULL,
   `app_id` int(10) unsigned NOT NULL,
   `external_organization_id` varchar(255) DEFAULT NULL,
-  `external_user_id` varchar(255) NOT NULL,
+  `external_id` varchar(255) NOT NULL,
   `role_id` tinyint(3) unsigned DEFAULT NULL,
   PRIMARY KEY (`user_id`,`app_id`),
   KEY `user_app_ibfk_2` (`app_id`),

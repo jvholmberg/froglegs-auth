@@ -5,7 +5,7 @@ import "server-only";
 import { encodeBase32LowerCaseNoPadding, encodeHexLowerCase } from "@oslojs/encoding";
 import { sha256 } from "@oslojs/crypto/sha2";
 
-import type { ISessionFlags, TblSession, UserAppRole, ISession, IUser } from "@/lib/server/db/types";
+import type { ISessionFlags, TblSession, UserAppRole, ISession, IUser, IUserAppItem } from "@/lib/server/db/types";
 import { cache } from "react";
 import { cookies } from "next/headers";
 import * as Database from "@/lib/server/db/sql";
@@ -15,12 +15,13 @@ import { getUser } from "./user";
 export async function validateSessionToken(token: string): Promise<ISessionValidationResult> {
   const sessionId = encodeHexLowerCase(sha256(new TextEncoder().encode(token)));
   const user = await getUser({ sessionId });
-  const session = await Database.getRecord<ISession>(`
+  const session = await Database.getRecord<ISession & ISessionFlags>(`
     SELECT
       id,
       user_id AS userId,
       expires_at AS expiresAt,
       two_factor_verified AS twoFactorVerified
+    FROM ${DB}.session
     WHERE
       id = :sessionId
   `, { sessionId });
@@ -28,20 +29,6 @@ export async function validateSessionToken(token: string): Promise<ISessionValid
   if (!user || !session) {
     return { session: null, user: null };
   }
-
-  // Since we get app-related data as string we must map it to a more useful format
-  user.apps = (user.apps as unknown as string)
-    .split(Database.SEPARATORS.group.js)
-    .map((e) => {
-      const val = e.split(Database.SEPARATORS.unit.js);
-      return {
-        appId: Number(val[0]),
-        externalOrganizationId: val[1],
-        externalId: val[2],
-        role: val[3] as UserAppRole,
-      };
-    });
-
   // If session has expired we delete it and return null
   if (Date.now() >= session.expiresAt.getTime()) {
     await Database.deleteQuery(`
@@ -149,7 +136,9 @@ export async function setSessionAs2FAVerified(sessionId: string) {
     table: "session",
     idColumn: "id",
     id: sessionId,
-    columnData: { two_factor_verified: true }
+    columnData: {
+      two_factor_verified: true,
+    }
   });
 }
 

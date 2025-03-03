@@ -16,6 +16,7 @@ export default async function RecoveryCodePage() {
 		return genericTooManyRequestsResult();
 	}
 	const { session, user } = await getCurrentSession();
+  console.log(session, user);
 	if (session === null) {
 		return redirect(ROUTE_SIGN_IN);
 	}

@@ -8,7 +8,7 @@ import { generateRandomRecoveryCode } from "@/lib/server/utils";
 import { IUpdateUserDetailsFormData } from "@/actions/user/schema";
 import * as Database from "@/lib/server/db/sql";
 import { DB } from "./constants";
-import { IUser, TblUser, TblUserDetails, UserAppRole } from "./db/types";
+import { IUser, IUserAppItem, TblUser, TblUserDetails, UserAppRole } from "./db/types";
 
 export async function createUser(email: string, password: string) {
 	const passwordHash = await hashPassword(password);
@@ -171,25 +171,27 @@ export async function getUser(options: {
       usd.first_name AS firstName,
       usd.last_name AS lastName,
       usr.email_verified AS emailVerified,
-      usr.totp_key != null AS registered2FA,
+      usr.totp_key IS NOT NULL AS registered2FA,
       (
         SELECT GROUP_CONCAT(
-          app.app_id,
+          usa.app_id,
           ${Database.SEPARATORS.unit.sql},
-          app.external_organization_id,
+          usa.external_organization_id,
           ${Database.SEPARATORS.unit.sql},
-          app.external_id,
+          usa.external_id,
           ${Database.SEPARATORS.unit.sql},
           rle.code SEPARATOR ${Database.SEPARATORS.group.sql}
         ) 
         FROM ${DB}.user_app AS usa
+        INNER JOIN ${DB}.role AS rle
+          ON usa.role_id = rle.id
         WHERE usa.user_id = usr.id
       ) AS apps
-    FROM ${DB}.user
+    FROM ${DB}.user AS usr
     LEFT JOIN ${DB}.user_details AS usd
       ON usd.user_id = usr.id
     LEFT JOIN ${DB}.role AS rle
-      ON usd.role_id = rle.id
+      ON usr.role_id = rle.id
     ${options.sessionId ? `
       INNER JOIN ${DB}.session AS ses
         ON usr.id = ses.user_id
@@ -213,8 +215,8 @@ export async function getUser(options: {
   }
 
   // Since we get app-related data as string we must map it to a more useful format
-  result.apps = (result.apps as unknown as string)
-    .split(Database.SEPARATORS.group.js)
+  const appsString = result.apps as unknown as string || "";
+  result.apps = appsString?.split(Database.SEPARATORS.group.js)
     .map((e) => {
       const val = e.split(Database.SEPARATORS.unit.js);
       return {
@@ -222,23 +224,31 @@ export async function getUser(options: {
         externalOrganizationId: val[1],
         externalId: val[2],
         role: val[3] as UserAppRole,
-      };
-    });
+      } as IUserAppItem;
+    })  || [];
 
 	return result;
 }
 
 export async function updateUserDetails(userId: number, data: IUpdateUserDetailsFormData): Promise<boolean> {
-  const savedId = await Database.save<TblUserDetails>({
-    db: DB,
-    table: "user_details",
-    idColumn: "user_id",
-    id: userId,
-    columnData: {
-      first_name: data.firstName,
-      last_name: data.lastName,
-    },
+  const ret = await Database.write(async (connection) => {
+    await Database.deleteQuery(`
+      DELETE FROM ${DB}.user_details
+      WHERE user_id = :userId
+    `, { userId }, { connection });
+    await Database.insertSingle<TblUserDetails>({
+      connection,
+      db: DB,
+      table: "user_details",
+      columnData: {
+        user_id: userId,
+        first_name: data.firstName,
+        last_name: data.lastName,
+      },
+    });
+    return true;
   });
-  return !!savedId;
+  
+  return ret;
 }
 

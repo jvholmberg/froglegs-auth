@@ -1,7 +1,7 @@
 "use client";
 
-import { IApp } from "@/lib/server/app";
-import { Table, TableTr, TableTd, TableThead, TableTh, TableTbody, Button } from "@mantine/core";
+import { IApp } from "@/lib/server/db/types";
+import { Table, TableTr, TableTd, TableThead, TableTh, TableTbody, Button, Text } from "@mantine/core";
 import { IconArrowRight } from "@tabler/icons-react";
 import Link from "next/link";
 
@@ -13,8 +13,10 @@ export function AppList({ data }: Props) {
 
   const rows = data.map((row, index) => (
     <TableTr key={`${row.name}_${index}`}>
-      <TableTd valign="top" fz="md">{row.name}</TableTd>
-      <TableTd valign="top">{row.description}</TableTd>
+      <TableTd valign="top">
+        <Text>{row.name}</Text>
+        <Text fz="xs">{row.description}</Text>
+      </TableTd>
       <TableTd valign="top" ta="right">
         {row.url && (
           <Button
@@ -36,8 +38,7 @@ export function AppList({ data }: Props) {
     <Table verticalSpacing="md">
       <TableThead>
         <TableTr>
-          <TableTh>Namn</TableTh>
-          <TableTh>Beskrivning</TableTh>
+          <TableTh>App</TableTh>
           <TableTh></TableTh>
         </TableTr>
       </TableThead>
