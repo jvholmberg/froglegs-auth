@@ -1,21 +1,22 @@
 "use client";
 
 import { Button } from "@mantine/core";
-import { IAppInvitation } from "@/lib/server/app";
-import { acceptAppInvitationFormDataSchema, IAcceptAppInvitationFormData } from "@/actions/invitation/schema";
+import { acceptAppInvitationFormDataSchema, IAcceptAppInvitationFormData } from "@/app/(signed-in)/invitations/schema";
 import { useForm } from "@mantine/form";
-import { acceptAppInvitationAction } from "@/actions/invitation";
-import { ROUTE_SETTINGS_INVITATIONS } from "@/lib/client/constants";
+import { acceptAppInvitationAction } from "@/app/(signed-in)/invitations/actions";
+import { ROUTE_INVITATIONS } from "@/lib/client/constants";
 import { useRouter } from "next/navigation";
 import { notifications } from "@mantine/notifications";
 
 import classes from "./AcceptAppInvitationButton.module.css";
+import { IAppInvitation } from "@/lib/server/db/types";
+import { IconCheck } from "@tabler/icons-react";
 
-interface Props {
+interface IProps {
   data: IAppInvitation;
 }
 
-export function AcceptAppInvitationButton(props: Props) {
+export function AcceptAppInvitationButton(props: IProps) {
   const router = useRouter();
   const form = useForm<IAcceptAppInvitationFormData>({
     mode: "controlled",
@@ -35,7 +36,7 @@ export function AcceptAppInvitationButton(props: Props) {
   const handleSubmit = async (data: IAcceptAppInvitationFormData) => {
     const { notification } = await acceptAppInvitationAction(data);
     notifications.show(notification);
-    router.push(ROUTE_SETTINGS_INVITATIONS);
+    router.push(ROUTE_INVITATIONS);
   };
   
 	return (
@@ -44,11 +45,11 @@ export function AcceptAppInvitationButton(props: Props) {
       className={classes.form}>
       <Button
         type="submit"
-        fw={500}
+        mr="xs"
         size="xs"
-        mr="sm"
         color="dark"
-        variant="filled">
+        variant="subtle"
+        leftSection={<IconCheck size={16} />}>
         Acceptera
       </Button>
 		</form>

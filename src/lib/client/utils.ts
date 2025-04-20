@@ -1,6 +1,6 @@
-import { UserAppRole, UserRole } from "../server/user";
+import { Role } from "@/lib/types/role";
 
-export function getRoleName(role: UserRole | UserAppRole | undefined | null) {
+export function getRoleName(role: Role | undefined | null) {
   switch (role) {
     case "super_admin":
       return "Super admin";

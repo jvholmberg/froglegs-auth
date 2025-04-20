@@ -1,9 +1,10 @@
 "use client";
 
+import { reset2FAAction } from "@/app/(anonymous)/2fa/actions";
+import { ITwoFactorResetFormData, twoFactorResetFormDataSchema } from "@/app/(anonymous)/2fa/schema";
 import { TextInput, Button } from "@mantine/core";
 import { useForm } from "@mantine/form";
-import { ITwoFactorResetFormData, twoFactorResetFormDataSchema } from "@/actions/2fa/schema";
-import { reset2FAAction } from "@/actions/2fa";
+import { notifications } from "@mantine/notifications";
 
 export function TwoFactorResetForm() {
 	const form = useForm<ITwoFactorResetFormData>({
@@ -22,7 +23,8 @@ export function TwoFactorResetForm() {
   });
 
   const handleSubmit = async (data: ITwoFactorResetFormData) => {
-    await reset2FAAction(data);
+    const { notification } = await reset2FAAction(data);
+    notifications.show(notification);
   };
   
 	return (
@@ -35,7 +37,7 @@ export function TwoFactorResetForm() {
         label="Återställningskod"
         placeholder="Ange din återställningskod"
         {...form.getInputProps(`code`)} />
-      <Button type="submit" fullWidth mt="xl" size="md" color="dark">
+      <Button type="submit" fullWidth mt="lg" size="md" color="dark">
         Verifiera
       </Button>
 		</form>

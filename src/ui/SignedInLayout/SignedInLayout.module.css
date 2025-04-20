@@ -11,48 +11,28 @@
   border-bottom: 1px solid light-dark(var(--mantine-color-gray-3), var(--mantine-color-dark-4));
 }
 
-.logo {
+.headerLogo {
   display: block;
-}
-
-.link {
-  display: flex;
-  align-items: center;
-  height: 100%;
-  padding-left: var(--mantine-spacing-md);
-  padding-right: var(--mantine-spacing-md);
-  text-decoration: none;
-  color: light-dark(var(--mantine-color-black), var(--mantine-color-white));
-  font-weight: 500;
-  font-size: var(--mantine-font-size-sm);
-
-  @media (max-width: $mantine-breakpoint-sm) {
-    height: 42px;
-    width: 100%;
-  }
-
-  @mixin hover {
-    background-color: light-dark(var(--mantine-color-gray-2), var(--mantine-color-dark-4));
-  }
-}
-
-.linkActive {
-  background-color: light-dark(var(--mantine-color-gray-0), var(--mantine-color-dark-6));
 }
 
 .main {
   flex: 1;
+  width: 100%;
+  background-color: light-dark(darken(var(--mantine-color-body), 3.5%), var(--mantine-color-body));
+}
+
+.mainInner {
   margin: 0 auto;
-  max-width: 720px;
+  max-width: 1000px;
   width: 100%;
 }
 
 .footer {
-  background-color: light-dark(var(--mantine-color-dark-2), var(--mantine-color-dark-8));
+  background-color: var(--mantine-color-dark-8);
   color: var(--mantine-color-white);
 }
 
-.inner {
+.footerInner {
   display: flex;
   max-width: 720px;
   justify-content: space-between;

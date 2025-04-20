@@ -1,11 +1,10 @@
-
-
-import { IUser, UserRole } from "@/lib/server/user";
 import { ReactNode } from "react";
+import { IUser } from "@/lib/server/db/types";
+import { Role } from "@/lib/types/role";
 
-interface Props {
+interface IProps {
   user: IUser;
-  roles: UserRole[];
+  roles: Role[];
   children: ReactNode | ReactNode[];
 }
 
@@ -13,7 +12,7 @@ export function ShowForUserRoles({
   user,
   roles,
   children,
-}: Props) {
+}: IProps) {
   const allowed = user.role && roles.includes(user.role);
   if (allowed) {
     return (

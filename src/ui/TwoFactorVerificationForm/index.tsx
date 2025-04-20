@@ -1,9 +1,10 @@
 "use client";
 
+import { verify2FAAction } from "@/app/(anonymous)/2fa/actions";
+import { ITwoFactorVerifyFormData, twoFactorSetupFormDataSchema } from "@/app/(anonymous)/2fa/schema";
 import { TextInput, Button } from "@mantine/core";
 import { useForm } from "@mantine/form";
-import { ITwoFactorVerifyFormData, twoFactorSetupFormDataSchema } from "@/actions/2fa/schema";
-import { verify2FAAction } from "@/actions/2fa";
+import { notifications } from "@mantine/notifications";
 
 export function TwoFactorVerificationForm() {
 	const form = useForm<ITwoFactorVerifyFormData>({
@@ -22,7 +23,8 @@ export function TwoFactorVerificationForm() {
   });
 
   const handleSubmit = async (data: ITwoFactorVerifyFormData) => {
-    await verify2FAAction(data);
+    const { notification } = await verify2FAAction(data);
+    notifications.show(notification);
   };
   
 	return (
@@ -35,7 +37,7 @@ export function TwoFactorVerificationForm() {
         label="Engångskod"
         placeholder="Ange koden i appen"
         {...form.getInputProps(`code`)} />
-      <Button type="submit" fullWidth mt="xl" size="md" color="dark">
+      <Button type="submit" fullWidth mt="lg" size="md" color="dark">
         Verifiera
       </Button>
 		</form>

@@ -2,8 +2,9 @@
 
 import { PasswordInput, TextInput, Button } from "@mantine/core";
 import { useForm } from "@mantine/form";
-import { signUpAction } from "@/actions/sign-up";
-import { ISignUpFormData, signUpFormDataSchema } from "@/actions/sign-up/schema";
+import { ISignUpFormData, signUpFormDataSchema } from "@/app/(anonymous)/sign-up/schema";
+import { signUpAction } from "@/app/(anonymous)/sign-up/actions";
+import { notifications } from "@mantine/notifications";
 
 export function SignUpForm() {
 	const form = useForm<ISignUpFormData>({
@@ -36,7 +37,8 @@ export function SignUpForm() {
   });
 
   const handleSubmit = async (data: ISignUpFormData) => {
-    await signUpAction(data);
+    const { notification } = await signUpAction(data);
+    notifications.show(notification);
   };
   
 	return (
@@ -63,7 +65,7 @@ export function SignUpForm() {
         label="Verifiera lösenord"
         placeholder="Ditt lösenord igen"
         {...form.getInputProps(`passwordVerify`)} />
-      <Button type="submit" fullWidth mt="xl" size="md" color="dark">
+      <Button type="submit" fullWidth mt="lg" size="md" color="dark">
         Skapa konto
       </Button>
 		</form>

@@ -1,9 +1,10 @@
 "use client";
 
+import { verifyPasswordReset2FAWithTOTPAction } from "@/app/(anonymous)/reset-password/actions";
+import { IPasswordResetRecoveryCodeFormData, passwordResetRecoveryCodeFormDataSchema } from "@/app/(anonymous)/reset-password/schema";
 import { TextInput, Button } from "@mantine/core";
 import { useForm } from "@mantine/form";
-import { IPasswordResetRecoveryCodeFormData, passwordResetRecoveryCodeFormDataSchema } from "@/actions/reset-password/schema";
-import { verifyPasswordReset2FAWithTOTPAction } from "@/actions/reset-password";
+import { notifications } from "@mantine/notifications";
 
 export function PasswordResetTOTPForm() {
 	const form = useForm<IPasswordResetRecoveryCodeFormData>({
@@ -22,7 +23,8 @@ export function PasswordResetTOTPForm() {
   });
 
   const handleSubmit = async (data: IPasswordResetRecoveryCodeFormData) => {
-    await verifyPasswordReset2FAWithTOTPAction(data);
+    const { notification } = await verifyPasswordReset2FAWithTOTPAction(data);
+    notifications.show(notification);
   };
   
 	return (
@@ -35,8 +37,8 @@ export function PasswordResetTOTPForm() {
         label="Engångskod"
         placeholder="Ange koden i appen"
         {...form.getInputProps(`code`)} />
-      <Button type="submit" fullWidth mt="xl" size="md" color="dark">
-        Verifiera
+      <Button type="submit" fullWidth mt="lg" size="md" color="dark">
+        Verifiera med engångskod
       </Button>
 		</form>
 	);

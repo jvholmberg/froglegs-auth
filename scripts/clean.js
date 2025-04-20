@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-require-imports */
 
 const { execSync } = require('child_process');
 
@@ -9,6 +10,10 @@ try {
   // Remove deps
   console.log('Remove dependencies');
   execSync('rm -rf node_modules');
+
+  // Remove deps
+  console.log('Clear cache');
+  execSync('rm -rf .next');
 
   // Clean deps
   console.log('Install dependencies');

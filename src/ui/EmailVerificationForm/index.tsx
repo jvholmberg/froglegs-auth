@@ -2,8 +2,9 @@
 
 import { TextInput, Button } from "@mantine/core";
 import { useForm } from "@mantine/form";
-import { IVerifyEmailFormData, verifyEmailFormDataSchema } from "@/actions/verify-email/schema";
-import { verifyEmailAction } from "@/actions/verify-email";
+import { IVerifyEmailFormData, verifyEmailFormDataSchema } from "@/app/(anonymous)/verify-email/schema";
+import { verifyEmailAction } from "@/app/(anonymous)/verify-email/actions";
+import { notifications } from "@mantine/notifications";
 
 export function EmailVerificationForm() {
 	const form = useForm<IVerifyEmailFormData>({
@@ -22,7 +23,8 @@ export function EmailVerificationForm() {
   });
 
   const handleSubmit = async (data: IVerifyEmailFormData) => {
-    await verifyEmailAction(data);
+    const { notification } = await verifyEmailAction(data);
+    notifications.show(notification);
   };
 
 	return (
@@ -35,7 +37,7 @@ export function EmailVerificationForm() {
         label="Verifikationskod"
         placeholder="Ange din verifikationskod"
         {...form.getInputProps(`code`)} />
-      <Button type="submit" fullWidth mt="xl" size="md" color="dark">
+      <Button type="submit" fullWidth mt="lg" size="md" color="dark">
         Verifiera e-post
       </Button>
 		</form>

@@ -1,9 +1,10 @@
 "use client";
 
+import { verifyPasswordResetEmailAction } from "@/app/(anonymous)/reset-password/actions";
+import { IPasswordResetEmailVerificationFormData, passwordResetEmailVerificationFormDataSchema } from "@/app/(anonymous)/reset-password/schema";
 import { TextInput, Button } from "@mantine/core";
 import { useForm } from "@mantine/form";
-import { IPasswordResetEmailVerificationFormData, passwordResetEmailVerificationFormDataSchema } from "@/actions/reset-password/schema";
-import { verifyPasswordResetEmailAction } from "@/actions/reset-password";
+import { notifications } from "@mantine/notifications";
 
 export function PasswordResetEmailVerificationForm() {
 	const form = useForm<IPasswordResetEmailVerificationFormData>({
@@ -22,7 +23,8 @@ export function PasswordResetEmailVerificationForm() {
   });
 
   const handleSubmit = async (data: IPasswordResetEmailVerificationFormData) => {
-    await verifyPasswordResetEmailAction(data);
+    const { notification } = await verifyPasswordResetEmailAction(data);
+    notifications.show(notification);
   };
   
 	return (
@@ -35,7 +37,7 @@ export function PasswordResetEmailVerificationForm() {
         label="Verifikationskod"
         placeholder="Ange din verifikationskod"
         {...form.getInputProps(`code`)} />
-      <Button type="submit" fullWidth mt="xl" size="md" color="dark">
+      <Button type="submit" fullWidth mt="lg" size="md" color="dark">
         Verifiera e-post
       </Button>
 		</form>

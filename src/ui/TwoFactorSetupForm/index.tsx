@@ -1,9 +1,9 @@
 "use client";
 
+import { setup2FAAction } from "@/app/(anonymous)/2fa/actions";
+import { ITwoFactorSetupFormData, twoFactorSetupFormDataSchema } from "@/app/(anonymous)/2fa/schema";
 import { TextInput, Button } from "@mantine/core";
 import { useForm } from "@mantine/form";
-import { ITwoFactorSetupFormData, twoFactorSetupFormDataSchema } from "@/actions/2fa/schema";
-import { setup2FAAction } from "@/actions/2fa";
 import { notifications } from "@mantine/notifications";
 
 export function TwoFactorSetupForm(props: { encodedTOTPKey: string }) {
@@ -49,7 +49,7 @@ export function TwoFactorSetupForm(props: { encodedTOTPKey: string }) {
         label="Engångskod"
         placeholder="Ange koden i appen"
         {...form.getInputProps(`code`)} />
-      <Button type="submit" fullWidth mt="xl" size="md" color="dark">
+      <Button type="submit" fullWidth mt="lg" size="md" color="dark">
         Koppla ihop
       </Button>
 		</form>

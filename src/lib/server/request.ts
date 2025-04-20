@@ -9,7 +9,13 @@ export const globalBucket = new RefillingTokenBucket<string>(100, 1);
 
 export async function globalGETRateLimit() {
   const headerStore = await headers();
-	const clientIP = headerStore.get("X-Forwarded-For");
+	let clientIP = headerStore.get("X-Forwarded-For");
+
+  // So that we may test rate-limiting during development
+  if (process.env.development === "development") {
+    clientIP = "localhost";
+  }
+
 	if (clientIP === null) {
 		return true;
 	}
@@ -18,7 +24,13 @@ export async function globalGETRateLimit() {
 
 export async function globalPOSTRateLimit() {
   const headerStore = await headers();
-	const clientIP = headerStore.get("X-Forwarded-For");
+	let clientIP = headerStore.get("X-Forwarded-For");
+
+  // So that we may test rate-limiting during development
+  if (process.env.development === "development") {
+    clientIP = "localhost";
+  }
+
 	if (clientIP === null) {
 		return true;
 	}

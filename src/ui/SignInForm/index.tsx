@@ -1,9 +1,10 @@
 "use client";
 
-import { signInAction } from "@/actions/sign-in";
-import { ISignInFormData, signInFormDataSchema } from "@/actions/sign-in/schema";
+import { signInAction } from "@/app/(anonymous)/sign-in/actions";
+import { ISignInFormData, signInFormDataSchema } from "@/app/(anonymous)/sign-in/schema";
 import { PasswordInput, TextInput, Button } from "@mantine/core";
 import { useForm } from "@mantine/form";
+import { notifications } from "@mantine/notifications";
 
 export function SignInForm() {
   const form = useForm<ISignInFormData>({
@@ -29,13 +30,12 @@ export function SignInForm() {
   });
   
   const handleSubmit = async (data: ISignInFormData) => {
-    await signInAction(data);
+    const { notification } = await signInAction(data);
+    notifications.show(notification);
   };
 
 	return (
-    <form
-      onSubmit={form.onSubmit(handleSubmit)}
-      onReset={form.onReset}>
+    <form onSubmit={form.onSubmit(handleSubmit)}>
       <TextInput
         key={form.key(`email`)}
         size="md"
@@ -51,11 +51,11 @@ export function SignInForm() {
         {...form.getInputProps(`password`)} />
       {/* <Checkbox
         key={form.key(`keepSignedIn`)}
-        mt="xl"
+        mt="md"
         size="md"
         label="Håll mig inloggad"
         {...form.getInputProps(`keepSignedIn`)} /> */}
-      <Button type="submit" fullWidth mt="xl" size="md" color="dark">
+      <Button type="submit" fullWidth mt="lg" size="md" color="dark">
         Logga in
       </Button>
     </form>

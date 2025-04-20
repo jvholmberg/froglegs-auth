@@ -1,0 +1,17 @@
+.wrapper {
+  min-height: 100vh;
+  background-size: cover;
+  background-position: bottom;
+  background-image: url("/banksy.png");
+}
+
+.form {
+  border-right: 1px solid light-dark(var(--mantine-color-gray-3), var(--mantine-color-dark-7));
+  min-height: 100vh;
+  max-width: 450px;
+  padding-top: 80px;
+
+  @media (max-width: $mantine-breakpoint-sm) {
+    max-width: 100%;
+  }
+}

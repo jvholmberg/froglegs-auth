@@ -1,12 +1,15 @@
 {
-  "name": "froglegs-auth",
+  "name": "vajper-auth-v2",
   "version": "0.1.0",
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "clean": "node ./scripts/clean.js",
+    "clear": "node ./scripts/clear.js",
+    "deploy": "node ./scripts/deploy.js"
   },
   "dependencies": {
     "@mantine/charts": "^7.16.3",
@@ -31,10 +34,9 @@
     "bcrypt": "^5.1.1",
     "dayjs": "^1.11.13",
     "dotenv": "^16.4.7",
-    "drizzle-orm": "^0.39.3",
+    "mariadb": "^3.4.0",
     "next": "15.1.6",
     "nodemailer": "^6.10.0",
-    "pg": "^8.13.1",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "recharts": "^2.15.1",
@@ -46,16 +48,14 @@
     "@eslint/eslintrc": "^3",
     "@types/node": "^20",
     "@types/nodemailer": "^6.4.17",
-    "@types/pg": "^8.11.11",
     "@types/react": "^19",
     "@types/react-dom": "^19",
-    "drizzle-kit": "^0.30.4",
     "eslint": "^9",
     "eslint-config-next": "15.1.6",
+    "node-ssh": "^13.2.0",
     "postcss": "^8.5.2",
     "postcss-preset-mantine": "^1.17.0",
     "postcss-simple-vars": "^7.0.1",
-    "tsx": "^4.19.2",
     "typescript": "^5"
   }
 }

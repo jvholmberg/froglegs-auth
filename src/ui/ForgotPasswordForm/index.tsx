@@ -1,9 +1,10 @@
 "use client";
 
-import { forgotPasswordAction } from "@/actions/forgot-password";
-import { forgotPasswordFormDataSchema, IForgotPasswordFormData } from "@/actions/forgot-password/schema";
+import { forgotPasswordAction } from "@/app/(anonymous)/forgot-password/actions";
+import { forgotPasswordFormDataSchema, IForgotPasswordFormData } from "@/app/(anonymous)/forgot-password/schema";
 import { TextInput, Button } from "@mantine/core";
 import { useForm } from "@mantine/form";
+import { notifications } from "@mantine/notifications";
 
 export function ForgotPasswordForm() {
 	const form = useForm<IForgotPasswordFormData>({
@@ -22,7 +23,8 @@ export function ForgotPasswordForm() {
   });
 
   const handleSubmit = async (data: IForgotPasswordFormData) => {
-    await forgotPasswordAction(data);
+    const { notification } = await forgotPasswordAction(data);
+    notifications.show(notification);
   };
 
 	return (
@@ -35,7 +37,7 @@ export function ForgotPasswordForm() {
         label="E-post"
         placeholder="hej@gmail.com"
         {...form.getInputProps(`email`)} />
-      <Button type="submit" fullWidth mt="xl" size="md" color="dark">
+      <Button type="submit" fullWidth mt="lg" size="md" color="dark">
         Skicka
       </Button>
 		</form>

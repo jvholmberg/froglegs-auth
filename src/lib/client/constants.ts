@@ -1,25 +1,27 @@
 
-export const ROUTE_LANDING = "/auth/sign-in";
+export const ROUTE_HOME = "/";
+export const ROUTE_SIGN_IN = "/sign-in";
+export const ROUTE_SIGN_UP = "/sign-up";
+export const ROUTE_VERIFY_EMAIL = "/verify-email";
+export const ROUTE_FORGOT_PASSWORD = "/forgot-password";
 
-export const ROUTE_SIGN_IN = "/auth/sign-in";
-export const ROUTE_SIGN_UP = "/auth/sign-up";
-export const ROUTE_VERIFY_EMAIL = "/auth/verify-email";
-
-export const ROUTE_RESET_PASSWORD = "/auth/reset-password";
-export const ROUTE_RESET_PASSWORD_2FA = "/auth/reset-password/2fa";
-export const ROUTE_FORGOT_PASSWORD = "/auth/forgot-password";
-
-export const ROUTE_RECOVERY_CODE = "/auth/recovery-code";
-export const ROUTE_RESET_PASSWORD_VERIFY_EMAIL = "/auth/reset-password/verify-email";
-
-export const ROUTE_2FA = "/auth/2fa";
-export const ROUTE_2FA_SETUP = "/auth/2fa/setup";
-export const ROUTE_2FA_RESET = "/auth/2fa/reset";
+export const ROUTE_2FA = "/2fa";
+export const ROUTE_2FA_SETUP = "/2fa/setup";
+export const ROUTE_2FA_RESET = "/2fa/reset";
 
 export const ROUTE_SETTINGS = "/settings";
-export const ROUTE_SETTINGS_ACCOUNT = "/settings/account";
-export const ROUTE_SETTINGS_INVITATIONS = "/settings/invitations";
-export const ROUTE_SETTINGS_ADMIN = "/settings/admin";
+export const ROUTE_SETTINGS_UPDATE_EMAIL = "/settings/update-email";
+export const ROUTE_SETTINGS_UPDATE_PASSWORD = "/settings/update-password";
+
+export const ROUTE_RESET_PASSWORD = "/reset-password";
+export const ROUTE_RESET_PASSWORD_2FA = "/reset-password/2fa";
+export const ROUTE_RESET_PASSWORD_VERIFY_EMAIL = "/reset-password/verify-email";
+
+export const ROUTE_ACCOUNT = "/account";
+export const ROUTE_INVITATIONS = "/invitations";
+export const ROUTE_INVITATIONS_SEND = "/invitations/send";
+export const ROUTE_ADMIN = "/admin";
+export const ROUTE_RECOVERY_CODE = "/recovery-code";
 
 export const TWO_FACTOR_MANDATORY = process.env.TWO_FACTOR_MANDATORY === "1";
-export const TOTP_DISPLAY_NAME = process.env.TOTP_DISPLAY_NAME || "Unknown";
+export const APP_DISPLAY_NAME = process.env.APP_DISPLAY_NAME || "Unknown";

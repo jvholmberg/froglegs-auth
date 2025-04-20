@@ -4,8 +4,8 @@ import "server-only";
 /********************************************************************************/
 
 import { NextResponse } from "next/server";
-import { IAcceptAppInvitationFormData, ICreateAppInvitationFormData, IDeclineAppInvitationFormData } from "@/actions/invitation/schema";
-import { acceptAppInvitationAction, createAppInvitationAction, declineAppInvitationAction } from "@/actions/invitation";
+import { IAcceptAppInvitationFormData, ICreateAppInvitationFormData, IDeclineAppInvitationFormData } from "@/app/(signed-in)/invitations/schema";
+import { acceptAppInvitationAction, createAppInvitationAction, declineAppInvitationAction } from "@/app/(signed-in)/invitations/actions";
 
 export async function POST(request: Request) {
   const body = await request.json() as ICreateAppInvitationFormData;

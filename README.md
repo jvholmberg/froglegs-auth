@@ -1,5 +1,5 @@
-# Froglegs Auth
-This project is built upon NextJS with typescript enabled. For storing data we have selected postgres and drizzle as the ORM (Object-relational mapper). For managing UI we opted for Mantine due to it's extensive collection of components and ease to use. Auth is implemented according to Lucia-auth (This package has been deprecated hence all code lies in this project instead meaning we own it).
+# Vajper Auth V2
+This project is built upon NextJS with typescript enabled. For storing data we have Mariadb. For managing UI we opted for Mantine due to it's extensive collection of components and ease to use. Auth is implemented according to Lucia-auth (This package has been deprecated hence all code lies in this project instead meaning we own it).
 
 ### Your environment
 
@@ -43,6 +43,8 @@ We build our images locally and then upload them directly to server hence bypass
 We make use of nvm in this app. This is because it simplifies managing different node version across multiple apps.
 In `.nvmrc` you may see the chosen node-version for this app, it's important that this same version is also used in the docker-image. If one is updated so should the other. You can see the base-image used for docker in the `FROM` segment ath the top of the Dockerfile, here is how it could look `FROM node:22-alpine AS base`
 
+### Development
+The preferred way of developing is locally on your machine however you may also go directly towards the live database if you need to check some specific case. When testing locally with other vajper-apps this should ideally be on port 3001, this is because other apps are setup for this.
 
 ## Building blocks
 - Password check with HaveIBeenPwned
@@ -52,14 +54,19 @@ In `.nvmrc` you may see the chosen node-version for this app, it's important tha
 - Password reset
 - Login throttling and rate limiting
 
-Emails are just logged to the console. Rate limiting is implemented using JavaScript `Map`.
+Emails are just logged to the console during development. Rate limiting is implemented using JavaScript `Map`.
+
+## Troubleshooting
+- See output from docker container. Connect to server and run `docker attach <container_name>`. After disconnecting you need to restart container.
 
 ## Initialize project
 
-- Create a postgresql database and run migration towards it using `drizzle-kit`.
+- Create a mariadb database and run `setup.sql` provided in repository
 - Create a .env.local file.
 - Set `DATABASE_URL` pointing towards the database you created in previous step.
 - Generate a 128 bit (16 byte) string, base64 encode it, and set it as `ENCRYPTION_KEY`.
+- Provide value for `APP_DISPLAY_NAME`, the name displayed in authenticator app.
+- Provide value for `TWO_FACTOR_MANDATORY`, this allows you to control if user should be able to skip 2FA.
 
 
 > You can use OpenSSL to quickly generate a secure key.

@@ -1,24 +1,24 @@
 "use client";
 
-import { updateUserDetailsAction } from "@/actions/user";
-import { IUpdateUserDetailsFormData, updateUserDetailsFormDataSchema } from "@/actions/user/schema";
-import { ROUTE_SETTINGS } from "@/lib/client/constants";
+import { updateUserDetailsAction } from "@/app/(signed-in)/account/actions";
+import { IUpdateUserDetailsFormData, updateUserDetailsFormDataSchema } from "@/app/(signed-in)/account/schema";
+import { ROUTE_HOME } from "@/lib/client/constants";
 import { TextInput, Button } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { notifications } from "@mantine/notifications";
 import { useRouter } from "next/navigation";
 
-interface Props {
+interface IProps {
   data: Partial<IUpdateUserDetailsFormData>;
 }
 
-export function SettingsAccountForm({ data }: Props) {
+export function SettingsAccountForm({ data }: IProps) {
   const router = useRouter()
   const form = useForm<IUpdateUserDetailsFormData>({
     mode: "controlled",
     initialValues: {
-      firstName: data.firstName || "",
-      lastName: data.lastName || "",
+      firstName: data?.firstName || "",
+      lastName: data?.lastName || "",
     },
     validate: {
       firstName: (value) => {
@@ -41,7 +41,7 @@ export function SettingsAccountForm({ data }: Props) {
     notifications.show(notification);
     form.setSubmitting(false);
     if (!error) {
-      router.push(ROUTE_SETTINGS);
+      router.push(ROUTE_HOME);
     } else {
       console.log(error);
     }
@@ -53,18 +53,16 @@ export function SettingsAccountForm({ data }: Props) {
       onReset={form.onReset}>
       <TextInput
         key={form.key(`firstName`)}
-        size="md"
         label="Förnamn"
         placeholder="Ange ditt förnamn"
         {...form.getInputProps(`firstName`)} />
       <TextInput
         key={form.key(`lastName`)}
         mt="md"
-        size="md"
         label="Efternamn"
         placeholder="Ange ditt efternamn"
         {...form.getInputProps(`lastName`)} />
-      <Button type="submit" fullWidth mt="xl" size="md" color="dark">
+      <Button type="submit" fullWidth mt="lg" size="md" color="dark">
         Spara
       </Button>
     </form>

@@ -1,9 +1,10 @@
 "use client";
 
+import { resetPasswordAction } from "@/app/(anonymous)/reset-password/actions";
+import { IResetPasswordFormData, resetPasswordFormDataSchema } from "@/app/(anonymous)/reset-password/schema";
 import { PasswordInput, Button } from "@mantine/core";
 import { useForm } from "@mantine/form";
-import { resetPasswordAction } from "@/actions/reset-password";
-import { IResetPasswordFormData, resetPasswordFormDataSchema } from "@/actions/reset-password/schema";
+import { notifications } from "@mantine/notifications";
 
 export function PasswordResetForm() {
   const form = useForm<IResetPasswordFormData>({
@@ -22,7 +23,8 @@ export function PasswordResetForm() {
   });
   
   const handleSubmit = async (data: IResetPasswordFormData) => {
-    await resetPasswordAction(data);
+    const { notification } = await resetPasswordAction(data);
+    notifications.show(notification);
   };
   
 	return (
@@ -30,12 +32,11 @@ export function PasswordResetForm() {
       onSubmit={form.onSubmit(handleSubmit)}
       onReset={form.onReset}>
       <PasswordInput
-        withAsterisk
         key={form.key(`password`)}
         label="Lösenord"
         placeholder="Ange nytt lösenord"
         {...form.getInputProps(`password`)} />
-      <Button type="submit" fullWidth mt="xl" size="md" color="dark">
+      <Button type="submit" fullWidth mt="lg" size="md" color="dark">
         Spara
       </Button>
 		</form>

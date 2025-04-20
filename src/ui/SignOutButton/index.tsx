@@ -1,20 +1,29 @@
 "use client";
 
-import { signoutAction } from "@/actions/sign-out";
+import { signoutAction } from "@/app/(signed-in)/actions";
 import { Button } from "@mantine/core";
-import { useActionState } from "react";
 import { IconLogout } from "@tabler/icons-react";
 import { useColorScheme } from "@mantine/hooks";
-
-const initialState = {
-	message: ""
-};
+import { notifications } from "@mantine/notifications";
+import { useForm } from "@mantine/form";
 
 export function SignOutButton() {
   const colorScheme = useColorScheme();
-	const [, action] = useActionState(signoutAction, initialState);
+  const form = useForm({
+    mode: "controlled",
+    initialValues: {
+    },
+    validate: {
+    },
+  });
+
+  const handleSubmit = async () => {
+    const { notification } = await signoutAction();
+    notifications.show(notification);
+  };
+
 	return (
-		<form action={action}>
+		<form onSubmit={form.onSubmit(handleSubmit)}>
       <Button
         type="submit"
         variant="light"

@@ -1,21 +1,22 @@
 "use client";
 
 import { Button } from "@mantine/core";
-import { IAppInvitation } from "@/lib/server/app";
-import { declineAppInvitationFormDataSchema, IDeclineAppInvitationFormData } from "@/actions/invitation/schema";
+import { declineAppInvitationFormDataSchema, IDeclineAppInvitationFormData } from "@/app/(signed-in)/invitations/schema";
 import { useForm } from "@mantine/form";
-import { declineAppInvitationAction } from "@/actions/invitation";
-import { ROUTE_SETTINGS_INVITATIONS } from "@/lib/client/constants";
+import { declineAppInvitationAction } from "@/app/(signed-in)/invitations/actions";
+import { ROUTE_INVITATIONS } from "@/lib/client/constants";
 import { useRouter } from "next/navigation";
 import { notifications } from "@mantine/notifications";
+import { IAppInvitation } from "@/lib/server/db/types";
 
 import classes from "./DeclineAppInvitationButton.module.css";
+import { IconTrash } from "@tabler/icons-react";
 
-interface Props {
+interface IProps {
   data: IAppInvitation;
 }
 
-export function DeclineAppInvitationButton(props: Props) {
+export function DeclineAppInvitationButton(props: IProps) {
   const router = useRouter();
   const form = useForm<IDeclineAppInvitationFormData>({
     mode: "controlled",
@@ -35,7 +36,7 @@ export function DeclineAppInvitationButton(props: Props) {
   const handleSubmit = async (data: IDeclineAppInvitationFormData) => {
     const { notification } = await declineAppInvitationAction(data);
     notifications.show(notification);
-    router.push(ROUTE_SETTINGS_INVITATIONS);
+    router.push(ROUTE_INVITATIONS);
   };
   
 	return (
@@ -44,11 +45,10 @@ export function DeclineAppInvitationButton(props: Props) {
       className={classes.form}>
       <Button
         type="submit"
-        fw={500}
         size="xs"
-        mr="sm"
         color="red"
-        variant="filled">
+        leftSection={<IconTrash size={16} />}
+        variant="subtle">
         Ta bort
       </Button>
 		</form>

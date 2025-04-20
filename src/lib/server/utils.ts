@@ -3,10 +3,13 @@ import "server-only";
 /********************************************************************************/
 
 import { encodeBase32UpperCaseNoPadding } from "@oslojs/encoding";
-import { getCurrentSession } from "./session";
-import { IActionResultExtended } from "@/actions/types";
-import { IUser, UserAppRole, UserRole } from "./user";
-import { ROUTE_2FA, ROUTE_LANDING, ROUTE_SETTINGS, ROUTE_VERIFY_EMAIL } from "../client/constants";
+import { IActionResult } from "@/lib/client/types";
+import { IUser } from "./db/types";
+import { NextResponse } from "next/server";
+import { TWO_FACTOR_MANDATORY } from "../client/constants";
+import { ISessionValidationResult } from "./session";
+import { headers } from "next/headers";
+import { Role } from "@/lib/types/role";
 
 export function generateRandomOTP(): string {
 	const bytes = new Uint8Array(5);
@@ -22,18 +25,21 @@ export function generateRandomRecoveryCode(): string {
 	return recoveryCode;
 }
 
-export function genericSuccesResult(message: string): IActionResultExtended {
+export function genericSuccesResult(
+  title: string | null | undefined,
+  message: string
+): IActionResult {
   return {
     error: undefined,
     notification: {
       color: "green",
-      title: "Dina ändringar har sparats",
+      title: title || "Dina ändringar har sparats",
       message,
     }
   };
 }
 
-export function genericTooManyRequestsResult(): IActionResultExtended {
+export function genericTooManyRequestsResult(): IActionResult {
   return {
     error: new Error(),
     notification: {
@@ -44,7 +50,7 @@ export function genericTooManyRequestsResult(): IActionResultExtended {
   };
 }
 
-export function genericValidationErrorResult(): IActionResultExtended {
+export function genericValidationErrorResult(): IActionResult {
   return {
     error: new Error(),
     notification: {
@@ -55,7 +61,7 @@ export function genericValidationErrorResult(): IActionResultExtended {
   };
 }
 
-export function genericErrorResult(message?: string): IActionResultExtended {
+export function genericErrorResult(message?: string): IActionResult {
   return {
     error: new Error(),
     notification: {
@@ -66,7 +72,7 @@ export function genericErrorResult(message?: string): IActionResultExtended {
   };
 }
 
-export function genericNoAccountErrorResult(): IActionResultExtended {
+export function genericNoAccountErrorResult(): IActionResult {
   return {
     error: new Error(),
     notification: {
@@ -77,7 +83,7 @@ export function genericNoAccountErrorResult(): IActionResultExtended {
   };
 }
 
-export function genericNotLoggedInErrorResult(): IActionResultExtended {
+export function genericNotLoggedInErrorResult(): IActionResult {
   return {
     error: new Error(),
     notification: {
@@ -88,7 +94,7 @@ export function genericNotLoggedInErrorResult(): IActionResultExtended {
   };
 }
 
-export function genericForbiddenErrorResult(): IActionResultExtended {
+export function genericForbiddenErrorResult(): IActionResult {
   return {
     error: new Error(),
     notification: {
@@ -99,63 +105,92 @@ export function genericForbiddenErrorResult(): IActionResultExtended {
   };
 }
 
-export function checkHasUserRole(allowedUserRoles: UserRole[], user: IUser): boolean {
-  return user.role
+export function checkHasUserRole(allowedUserRoles: Role[], user: IUser | null): boolean {
+  return user?.role
     ? allowedUserRoles.includes(user.role)
     : false;
 }
 
 export function checkHasAppUserRole(
   appId: number,
-  externalOrganizationId: string | null,
-  allowedAppUserRoles: UserAppRole[],
-  user: IUser,
+  allowedAppUserRoles: Role[],
+  user: IUser | null,
 ): boolean {
-  const appUserRole = user.apps.find((e) => {
-    if (appId === e.appId) { return false; }
-    if (externalOrganizationId === e.externalId) { return false; }
-    return true;
-  })?.role;
+  const appUserRole = user?.apps.find((e) => appId !== e.appId)?.role;
   return appUserRole
     ? allowedAppUserRoles.includes(appUserRole)
     : false;
 }
 
-export async function checkSignedIn(): Promise<IActionResultExtended | undefined> {
-  const { session, user } = await getCurrentSession();
-  if (session === null) {
-    return genericNotLoggedInErrorResult();
-  }
-  if (user === null) {
-    return genericNoAccountErrorResult();
-  }
-  if (!user.emailVerified) {
-    return genericForbiddenErrorResult();
-  }
-  if (user.registered2FA && !session.twoFactorVerified) {
-    return genericForbiddenErrorResult();
-  }
-}
+export function checkApiRequestLoggedIn<T>(
+  emptyResponse: T,
+  { user, session }: ISessionValidationResult,
+) {
 
-export async function shouldRedirectDueToUserRole(allowedRoles: UserRole[]): Promise<string | null> {
-  const { session, user } = await getCurrentSession();
-  if (session === null) {
-    return ROUTE_LANDING;
+  // Check if user is logged in
+  if (!session) {
+    return NextResponse.json(emptyResponse, {
+      status: 401,
+      statusText: "Inte inloggad!",
+    });
   }
-  if (user === null) {
-    return ROUTE_LANDING;
-  }
-  if (!user.emailVerified) {
-    return ROUTE_VERIFY_EMAIL;
-  }
-  if (user.registered2FA && !session.twoFactorVerified) {
-    return ROUTE_2FA;
+  if (!user) {
+    return NextResponse.json(emptyResponse, {
+      status: 401,
+      statusText: "Inte inloggad!",
+    });
   }
 
-  // Now check roles
-  if (!checkHasUserRole(allowedRoles, user)) {
-    return ROUTE_SETTINGS;
+  // Check if account is setup correctly
+  if (!user.emailVerified) {
+    return NextResponse.json(emptyResponse, {
+      status: 403,
+      statusText: "Du har inte verifierat din e-post!!",
+    });
   }
-  
+  if (TWO_FACTOR_MANDATORY) {
+    if (!user.registered2FA) {
+      return NextResponse.json(emptyResponse, {
+        status: 403,
+        statusText: "Du saknar 2-faktors autentisering på ditt konto!",
+      });
+    }
+    if (!session.twoFactorVerified) {
+      return NextResponse.json(emptyResponse, {
+        status: 401,
+        statusText: "Du har inte autentiserat dig med din 2-faktors autentisering!",
+      });
+    }
+  } else {
+    if (user.registered2FA && !session.twoFactorVerified) {
+      return NextResponse.json(emptyResponse, {
+        status: 401,
+        statusText: "Du har inte autentiserat dig med din 2-faktors autentisering!",
+      });
+    }
+  }
+
   return null;
 }
+
+export async function getCookieDomain() {
+  const headersList = await headers();
+	const hostHeader = headersList.get("X-Forwarded-Host");
+
+  let ret = "";
+  if (hostHeader) {
+    ret = hostHeader
+      .split(".")
+      .reduce((previousValue, currentValue, currentIndex) => {
+        if (currentIndex !== 0) {
+          previousValue += `.${currentValue}`;
+        }
+        return previousValue;
+      }, "");
+  } else {
+    ret = hostHeader ?? "localhost";
+  }
+
+  return ret;
+}
+
