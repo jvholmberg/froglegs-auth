@@ -1,4 +1,4 @@
-import { Role } from "@/lib/types/role";
+import { Role } from "../server/db/types";
 
 export function getRoleName(role: Role | undefined | null) {
   switch (role) {

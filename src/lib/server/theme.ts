@@ -3,11 +3,10 @@ import "server-only";
 /********************************************************************************/
 
 import { headers } from "next/headers";
-import * as Database from "@/lib/server/db/sql";
-import { DB } from "./constants";
-import { TblTheme } from "@/lib/types/theme";
+import db, { schema } from "@/lib/server/db";
+import { eq } from "drizzle-orm";
 
-export async function getTheme(): Promise<TblTheme | null> {
+export async function getTheme() {
   let themeSlug: string | null = null;
   if (process.env.NODE_ENV === "production") {
     const headerStore = await headers();
@@ -15,22 +14,13 @@ export async function getTheme(): Promise<TblTheme | null> {
   } else {
     themeSlug = "localhost"
   }
-  const record = await Database.getRecord<TblTheme>(`
-    SELECT
-      slug,
-      header_logo_url,
-      footer_logo_url,
-      backdrop_url,
-      alt_text,
-      header_logo_height,
-      header_logo_width,
-      footer_logo_height,
-      footer_logo_width,
-      backdrop_position
-    FROM ${DB}.theme
-    WHERE 
-      slug= :themeSlug
-  `, { themeSlug });
 
-  return record;
+  const [result] = await db
+    .select()
+    .from(schema.themeTable)
+    .where(
+      eq(schema.themeTable.slug, themeSlug || "default")
+    ).limit(1);
+
+  return result ?? null;
 }

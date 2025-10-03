@@ -6,13 +6,10 @@ import { decrypt, decryptToString, encrypt, encryptString } from "@/lib/server/e
 import { hashPassword } from "@/lib/server/password";
 import { generateRandomRecoveryCode } from "@/lib/server/utils";
 import { IUpdateUserDetailsFormData } from "@/app/(signed-in)/account/schema";
-import * as Database from "@/lib/server/db/sql";
-import { DB } from "./constants";
-import { IUser, IUserAppItem } from "./db/types";
-import { EApiUser } from "@/app/api/schema";
-import { Role } from "@/lib/types/role";
-import { TblUser } from "@/lib/types/user";
-import { TblUserDetails } from "@/lib/types/user-details";
+import db from "@/lib/server/db";
+import { IUser, IUserAppItem, TblNewUserDetails } from "./db/types";
+import { and, eq, sql } from "drizzle-orm";
+import { schema } from "@/lib/server/db";
 
 export async function createUser(email: string, password: string) {
   // Hash password, generate/encrypt recovery code
@@ -21,15 +18,12 @@ export async function createUser(email: string, password: string) {
 	const encryptedRecoveryCode = encryptString(recoveryCode);
 
   // Insert user
-  const insertedId = await Database.insertSingle<TblUser>({
-    db: DB,
-    table: "user",
-    columnData: {
-      email,
-      password_hash: passwordHash,
-      recovery_code: Buffer.from(encryptedRecoveryCode),
-    },
-  });
+  const [{ insertedId }] = await db.insert(schema.userTable).values({
+    email,
+    passwordHash,
+    recoveryCode: Buffer.from(encryptedRecoveryCode),
+  }).returning({ insertedId: schema.userTable.id });
+
 	if (!insertedId) {
 		throw new Error("Unexpected error");
 	}
@@ -41,15 +35,9 @@ export async function updateUserPassword(userId: number, password: string): Prom
   try {
     const passwordHash = await hashPassword(password);
     
-    await Database.update<TblUser>({
-      db: DB,
-      table: "user",
-      idColumn: "id",
-      id: userId,
-      columnData: {
-        password_hash: passwordHash,
-      },
-    });
+    await db.update(schema.userTable).set({
+      passwordHash,
+    }).where(eq(schema.userTable.id, userId));
 
     return true;
   } catch {
@@ -57,54 +45,28 @@ export async function updateUserPassword(userId: number, password: string): Prom
   }
 }
 
-
 export async function updateUserEmailAndSetEmailAsVerified(userId: number, email: string) {
-  await Database.update<TblUser>({
-    db: DB,
-    table: "user",
-    idColumn: "id",
-    id: userId,
-    columnData: {
-      email,
-      email_verified: true,
-    },
-  });
+  await db.update(schema.userTable).set({
+    email,
+    emailVerified: true,
+  }).where(eq(schema.userTable.id, userId));
 }
 
 export async function setUserAsEmailVerifiedIfEmailMatches(userId: number, email: string) {
-  const id = await Database.getRecord<{ id: number }>(`
-    SELECT
-      id
-    FROM ${DB}.user
-    WHERE
-      id = :userId
-      AND
-      email = :email
-  `, { userId, email });
+  const [{ id }] = await db.update(schema.userTable).set({
+    emailVerified: true,
+  }).where(and(
+    eq(schema.userTable.id, userId),
+    eq(schema.userTable.email, email),
+  )).returning({ id: schema.userTable.id });
 
-  // id and email matches so now we can update row
-  if (id) {
-    await Database.query(`
-      UPDATE ${DB}.user
-      SET
-        email_verified = 1
-      WHERE
-        id = :userId
-        AND
-        email = :email
-    `, { userId, email });
-  }
   return !!id;
 }
 
 export async function getUserPasswordHash(userId: number) {
-  const result = await Database.getRecord<{ passwordHash: string }>(`
-    SELECT
-      password_hash AS passwordHash
-    FROM ${DB}.user
-    WHERE
-      id = :userId
-  `, { userId });
+  const [result] = await db.select().from(schema.userTable).where(
+    eq(schema.userTable.id, userId)
+  ).limit(1);
 
   if (!result) {
     throw new Error("Ogiltigt användar id");
@@ -113,13 +75,7 @@ export async function getUserPasswordHash(userId: number) {
 }
 
 export async function getUserRecoverCode(userId: number) {
-  const result = await Database.getRecord<{ recoveryCode: Uint8Array }>(`
-    SELECT
-      recovery_code AS recoveryCode
-    FROM ${DB}.user
-    WHERE
-      id = :userId
-  `, { userId });
+  const [result] = await db.select().from(schema.userTable).where(eq(schema.userTable.id, userId)).limit(1);
   if (!result) {
     throw new Error("Ogiltigt användar id");
   }
@@ -127,13 +83,10 @@ export async function getUserRecoverCode(userId: number) {
 }
 
 export async function getUserTOTPKey(userId: number) {
-  const result = await Database.getRecord<{ totpKey: Uint8Array }>(`
-    SELECT
-      totp_key AS totpKey
-    FROM ${DB}.user
-    WHERE
-      id = :userId
-  `, { userId });
+  const [result] = await db.select({
+    totpKey: schema.userTable.totpKey,
+  }).from(schema.userTable).where(eq(schema.userTable.id, userId)).limit(1);
+
   if (!result) {
     throw new Error("Ogiltigt användar id");
   }
@@ -146,89 +99,67 @@ export async function getUserTOTPKey(userId: number) {
 
 export async function updateUserTOTPKey(userId: number, key: Uint8Array) {
   const encrypted = encrypt(key);
-  await Database.update<TblUser>({
-    db: DB,
-    table: "user",
-    idColumn: "id",
-    id: userId,
-    columnData: {
-      totp_key: Buffer.from(encrypted),
-    },
-  });
+
+  await db.update(schema.userTable).set({
+    totpKey: Buffer.from(encrypted),
+  }).where(eq(schema.userTable.id, userId));
 }
 
 export async function resetUserRecoveryCode(userId: number) {
   const recoveryCode = generateRandomRecoveryCode();
   const encrypted = encryptString(recoveryCode);
-  await Database.update<TblUser>({
-    db: DB,
-    table: "user",
-    idColumn: "id",
-    id: userId,
-    columnData: {
-      recovery_code: encrypted,
-    },
-  });
+
+  await db.update(schema.userTable).set({
+    recoveryCode: encrypted,
+  }).where(eq(schema.userTable.id, userId));
+
   return recoveryCode;
 }
 
 export async function getUsers(): Promise<IUser[]> {
-  const result = await Database.query<IUser>(`
-    SELECT
-      usr.id AS id,
-      usr.email AS email,
-      rle.slug AS role,
-      usd.first_name AS firstName,
-      usd.last_name AS lastName,
-      usr.email_verified AS emailVerified,
-      usr.totp_key IS NOT NULL AS registered2FA,
-      (
-        SELECT GROUP_CONCAT(
-          usa.app_id,
-          ${Database.SEPARATORS.unit.sql},
-          app.slug,
-          ${Database.SEPARATORS.unit.sql},
-          usa.external_partition_id,
-          ${Database.SEPARATORS.unit.sql},
-          usa.external_organization_id,
-          ${Database.SEPARATORS.unit.sql},
-          usa.external_id,
-          ${Database.SEPARATORS.unit.sql},
-          rle.slug SEPARATOR ${Database.SEPARATORS.group.sql}
-        )
-        FROM ${DB}.user_app AS usa
-        INNER JOIN ${DB}.app AS app
-          ON usa.app_id = app.id
-        INNER JOIN ${DB}.role AS rle
-          ON usa.role_id = rle.id
-        WHERE usa.user_id = usr.id
-      ) AS apps
-    FROM ${DB}.user AS usr
-    LEFT JOIN ${DB}.user_details AS usd
-      ON usd.user_id = usr.id
-    LEFT JOIN ${DB}.role AS rle
-      ON usr.role_id = rle.id
-  `, {});
+  // First, get all users with their basic info
+  const users = await db.select({
+    id: schema.userTable.id,
+    email: schema.userTable.email,
+    role: schema.roleTable.slug,
+    firstName: schema.userDetailsTable.firstName,
+    lastName: schema.userDetailsTable.lastName,
+    emailVerified: schema.userTable.emailVerified,
+    registered2FA: sql<boolean>`${schema.userTable.totpKey} IS NOT NULL`,
+  })
+  .from(schema.userTable)
+  .leftJoin(schema.userDetailsTable, eq(schema.userDetailsTable.userId, schema.userTable.id))
+  .leftJoin(schema.roleTable, eq(schema.roleTable.id, schema.userTable.roleId));
 
-  // Since we get app-related data as string we must map it to a more useful format
-  const mappedResult = result.map((user) => {
-    const appsString = user.apps as unknown as string || "";
-    user.apps = appsString?.split(Database.SEPARATORS.group.js)
-      .map((e) => {
-        const val = e.split(Database.SEPARATORS.unit.js);
-        return {
-          appId: Number(val[0]),
-          appSlug: val[1],
-          externalPartitionId: val[2] ? Number(val[2]) : null,
-          externalOrganizationId: val[3] ? Number(val[3]) : null,
-          externalId: val[4] ? Number(val[4]) : null,
-          role: val[5] as Role,
-        } as IUserAppItem;
-      }) || [];
-    return user;
-  });
+  // Then get all user-app relationships
+  const userApps = await db.select({
+    userId: schema.userAppTable.userId,
+    appId: schema.userAppTable.appId,
+    appSlug: schema.appTable.slug,
+    externalPartitionId: schema.userAppTable.externalPartitionId,
+    externalOrganizationId: schema.userAppTable.externalOrganizationId,
+    externalId: schema.userAppTable.externalId,
+    role: schema.roleTable.slug,
+  })
+  .from(schema.userAppTable)
+  .innerJoin(schema.appTable, eq(schema.userAppTable.appId, schema.appTable.id))
+  .innerJoin(schema.roleTable, eq(schema.userAppTable.roleId, schema.roleTable.id));
 
-  return mappedResult;
+  // Combine users with their apps
+  return users.map(user => ({
+    ...user,
+    role: user.role as any, // Cast to Role type
+    apps: userApps
+      .filter(ua => ua.userId === user.id)
+      .map(ua => ({
+        appId: ua.appId,
+        appSlug: ua.appSlug,
+        externalPartitionId: ua.externalPartitionId || 0,
+        externalOrganizationId: ua.externalOrganizationId || 0,
+        externalId: ua.externalId ?? 0,
+        role: ua.role as any,
+      } as IUserAppItem))
+  }));
 }
 
 export async function getOneUser(options: {
@@ -237,79 +168,68 @@ export async function getOneUser(options: {
   userId?: number;
   email?: string;
 }): Promise<IUser | null> {
-  const result = await Database.getRecord<IUser>(`
-    SELECT
-      usr.id AS id,
-      usr.email AS email,
-      rle.slug AS role,
-      usd.first_name AS firstName,
-      usd.last_name AS lastName,
-      usr.email_verified AS emailVerified,
-      usr.totp_key IS NOT NULL AS registered2FA,
-      (
-        SELECT GROUP_CONCAT(
-          usa.app_id,
-          ${Database.SEPARATORS.unit.sql},
-          app.slug,
-          ${Database.SEPARATORS.unit.sql},
-					IFNULL(usa.external_partition_id, ''),
-          ${Database.SEPARATORS.unit.sql},
-					IFNULL(usa.external_organization_id, ''),
-          ${Database.SEPARATORS.unit.sql},
-					IFNULL(usa.external_id, ''),
-          ${Database.SEPARATORS.unit.sql},
-          rle.slug SEPARATOR ${Database.SEPARATORS.group.sql}
-        )
-        FROM ${DB}.user_app AS usa
-        INNER JOIN ${DB}.app AS app
-          ON usa.app_id = app.id
-        INNER JOIN ${DB}.role AS rle
-          ON usa.role_id = rle.id
-        WHERE usa.user_id = usr.id
-      ) AS apps
-    FROM ${DB}.user AS usr
-    LEFT JOIN ${DB}.user_details AS usd
-      ON usd.user_id = usr.id
-    LEFT JOIN ${DB}.role AS rle
-      ON usr.role_id = rle.id
-    ${options.sessionId ? `
-      INNER JOIN ${DB}.session AS ses
-        ON usr.id = ses.user_id
-      WHERE ses.id = :sessionId
-    ` : ""}
-    ${options.passwordResetSessionId ? `
-      INNER JOIN ${DB}.password_reset_session AS ses
-        ON usr.id = ses.user_id
-      WHERE ses.id = :passwordResetSessionId
-    ` : ""}
-    ${options.userId ? `
-      WHERE usr.id = :userId
-    ` : ""}
-    ${options.email ? `
-      WHERE usr.email = :email
-    ` : ""}
-  `, { ...options });
+  
+  const query = db.select({
+    id: schema.userTable.id,
+    email: schema.userTable.email,
+    role: schema.roleTable.slug,
+    firstName: schema.userDetailsTable.firstName,
+    lastName: schema.userDetailsTable.lastName,
+    emailVerified: schema.userTable.emailVerified,
+    registered2FA: sql<boolean>`${schema.userTable.totpKey} IS NOT NULL`,
+  })
+  .from(schema.userTable)
+  .leftJoin(schema.userDetailsTable, eq(schema.userDetailsTable.userId, schema.userTable.id))
+  .leftJoin(schema.roleTable, eq(schema.roleTable.id, schema.userTable.roleId))
+  .$dynamic();
 
-  if (!result) {
+  if (options.sessionId) {
+    query
+      .innerJoin(schema.sessionTable, eq(schema.sessionTable.userId, schema.userTable.id))
+      .where(eq(schema.sessionTable.id, options.sessionId));
+  } else if (options.passwordResetSessionId) {
+    query
+      .innerJoin(schema.passwordResetSessionTable, eq(schema.passwordResetSessionTable.userId, schema.userTable.id))
+      .where(eq(schema.passwordResetSessionTable.id, options.passwordResetSessionId));
+  } else if (options.userId) {
+    query.where(eq(schema.userTable.id, options.userId));
+  } else if (options.email) {
+    query.where(eq(schema.userTable.email, options.email));
+  }
+
+  const [user] = await query.limit(1);
+
+  if (!user) {
     return null;
   }
 
-  // Since we get app-related data as string we must map it to a more useful format
-  const appsString = result.apps as unknown as string || "";
-  result.apps = appsString?.split(Database.SEPARATORS.group.js)
-    .map((e) => {
-      const val = e.split(Database.SEPARATORS.unit.js);
-      return {
-        appId: Number(val[0]),
-        appSlug: val[1],
-        externalPartitionId: val[2] ? Number(val[2]) : null,
-        externalOrganizationId: val[3] ? Number(val[3]) : null,
-        externalId: val[4] ? Number(val[4]) : null,
-        role: val[5] as Role,
-      } as IUserAppItem;
-    }) || [];
+  // Get user's apps separately
+  const userApps = await db.select({
+    appId: schema.userAppTable.appId,
+    appSlug: schema.appTable.slug,
+    externalPartitionId: schema.userAppTable.externalPartitionId,
+    externalOrganizationId: schema.userAppTable.externalOrganizationId,
+    externalId: schema.userAppTable.externalId,
+    role: schema.roleTable.slug,
+  })
+  .from(schema.userAppTable)
+  .innerJoin(schema.appTable, eq(schema.userAppTable.appId, schema.appTable.id))
+  .innerJoin(schema.roleTable, eq(schema.userAppTable.roleId, schema.roleTable.id))
+  .where(eq(schema.userAppTable.userId, user.id));
 
-  return result;
+  // Combine user with their apps
+  return {
+    ...user,
+    role: user.role as any, // Cast to Role type
+    apps: userApps.map(ua => ({
+      appId: ua.appId,
+      appSlug: ua.appSlug,
+      externalPartitionId: ua.externalPartitionId || 0,
+      externalOrganizationId: ua.externalOrganizationId || 0,
+      externalId: ua.externalId ?? 0,
+      role: ua.role as any,
+    } as IUserAppItem))
+  };
 }
 
 export async function getExternalUsers(options: {
@@ -317,54 +237,49 @@ export async function getExternalUsers(options: {
   appSlug?: string;
   externalPartitionId?: number;
   externalOrganizationId?: number;
-}): Promise<EApiUser[]> {
-  const result = await Database.query<EApiUser>(`
-    SELECT
-      usr.id AS id,
-      usa.external_partition_id AS externalPartitionId,
-      usa.external_organization_id AS externalOrganizationId,
-      usa.external_id AS externalId,
-      usr.email AS email,
-      rle.slug AS role,
-      usd.first_name AS firstName,
-      usd.last_name AS lastName
-    FROM ${DB}.user_app AS usa
-    INNER JOIN ${DB}.user AS usr
-      ON usa.user_id = usr.id
-    LEFT JOIN ${DB}.user_details AS usd
-      ON usr.id = usd.user_id
-    INNER JOIN ${DB}.role AS rle
-      ON usa.role_id = rle.id
-    ${/** If we're gonna filter using app slug we must also join app-table */
-    options.appSlug ? `INNER JOIN ${DB}.app as app ON usa.app_id = app.id` : ""
-    }
-    WHERE
-      1 = 1
-      ${options.appId ? "AND usa.app_id = :appId" : ""}
-      ${options.appSlug ? "AND app.slug = :appSlug" : ""}
-      ${options.externalPartitionId ? "AND usa.external_partition_id = :externalPartitionId" : ""}
-      ${options.externalOrganizationId ? "AND usa.external_organization_id = :externalOrganizationId" : ""}  
-  `, { ...options });
+}) {
+
+  const result = await db.select({
+    id: schema.userTable.id,
+    externalPartitionId: schema.userAppTable.externalPartitionId,
+    externalOrganizationId: schema.userAppTable.externalOrganizationId,
+    externalId: schema.userAppTable.externalId,
+    email: schema.userTable.email,
+    role: schema.roleTable.slug,
+    firstName: schema.userDetailsTable.firstName,
+    lastName: schema.userDetailsTable.lastName,
+  })
+    .from(schema.userAppTable)
+    .innerJoin(schema.appTable, eq(schema.userAppTable.appId, schema.appTable.id))
+    .innerJoin(schema.userTable, eq(schema.userAppTable.userId, schema.userTable.id))
+    .leftJoin(schema.userDetailsTable, eq(schema.userTable.id, schema.userDetailsTable.userId))
+    .leftJoin(schema.roleTable, eq(schema.userTable.roleId, schema.roleTable.id))
+    .where(and(
+      options.appId
+        ? eq(schema.userAppTable.appId, options.appId)
+        : undefined,
+      options.appSlug
+        ? eq(schema.appTable.slug, options.appSlug)
+        : undefined,
+      options.externalPartitionId
+        ? eq(schema.userAppTable.externalPartitionId, options.externalPartitionId)
+        : undefined,
+      options.externalOrganizationId
+        ? eq(schema.userAppTable.externalOrganizationId, options.externalOrganizationId)
+        : undefined,
+    ));
 
   return result;
 }
 
 export async function updateUserDetails(userId: number, data: IUpdateUserDetailsFormData): Promise<boolean> {
-  const ret = await Database.write(async (connection) => {
-    await Database.deleteQuery(`
-      DELETE FROM ${DB}.user_details
-      WHERE user_id = :userId
-    `, { userId }, { connection });
-    await Database.insertSingle<TblUserDetails>({
-      connection,
-      db: DB,
-      table: "user_details",
-      columnData: {
-        user_id: userId,
-        first_name: data.firstName,
-        last_name: data.lastName,
-      },
-    });
+  const ret = await db.transaction(async (tx) => {
+    await tx.delete(schema.userDetailsTable).where(eq(schema.userDetailsTable.userId, userId));
+    await tx.insert(schema.userDetailsTable).values({
+      userId,
+      firstName: data.firstName,
+      lastName: data.lastName,
+    } as TblNewUserDetails);
     return true;
   });
 
@@ -373,10 +288,7 @@ export async function updateUserDetails(userId: number, data: IUpdateUserDetails
 
 export async function deleteUser(userId: number) {
   try {
-    await Database.query(`
-      DELETE FROM ${DB}.user
-      WHERE id = :userId
-    `, { userId });
+    db.delete(schema.userTable).where(eq(schema.userTable.id, userId));
 
     return true; 
   } catch {
@@ -387,15 +299,9 @@ export async function deleteUser(userId: number) {
 
 export async function updateUserRole(userId: number, roleId: number | null) {
   try {
-    await Database.update<TblUser>({
-      db: DB,
-      table: "user",
-      idColumn: "id",
-      id: userId,
-      columnData: {
-        role_id: roleId,
-      },
-    });
+    db.update(schema.userTable).set({
+      roleId,
+    }).where(eq(schema.userTable.id, userId));
 
     return true;
   } catch {

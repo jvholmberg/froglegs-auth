@@ -13,7 +13,7 @@ import {
 } from "@/lib/server/utils";
 import { getRole } from "@/lib/server/role";
 import { getCurrentSession } from "@/lib/server/session";
-import { Role } from "@/lib/types/role";
+import { Role } from "@/lib/server/db/types";
 
 export async function deleteUserAction(userId: number): Promise<IActionResult> {
   const { user } = await getCurrentSession();

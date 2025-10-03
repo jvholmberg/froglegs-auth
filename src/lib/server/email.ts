@@ -2,8 +2,8 @@
 import "server-only";
 /********************************************************************************/
 
-import * as Database from "@/lib/server/db/sql";
-import { DB } from "./constants";
+import db, { schema } from "@/lib/server/db";
+import { eq } from "drizzle-orm";
 
 import nodemailer from "nodemailer";
 import { z } from "zod";
@@ -58,12 +58,11 @@ export function verifyEmailInput(email: string): boolean {
 }
 
 export async function checkEmailAvailability(email: string) {
-  const result = await Database.query(`
-    SELECT
-      email
-    FROM ${DB}.user
-    WHERE
-      email = :email
-  `, { email });
-	return !result.length;
+  const result = await db
+    .select()
+    .from(schema.userTable)
+    .where(eq(schema.userTable.email, email))
+    .limit(1);
+
+  return !result.length;
 }

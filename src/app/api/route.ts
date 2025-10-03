@@ -6,7 +6,6 @@ import "server-only";
 import { NextRequest, NextResponse } from "next/server";
 import { deleteSessionTokenCookie, getCurrentSession, invalidateSession } from "@/lib/server/session";
 import { ROUTE_SIGN_IN, TWO_FACTOR_MANDATORY } from "@/lib/client/constants";
-import { EApiUser } from "@/app/api/schema";
 import { globalPOSTRateLimit } from "@/lib/server/request";
 import { genericTooManyRequestsResult, genericNotLoggedInErrorResult } from "@/lib/server/utils";
 import { redirect } from "next/navigation";
@@ -72,8 +71,7 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
     return NextResponse.json({}, { status: 403, statusText: "Appen saknas eller så har du inte access till den!" });
   }
 
-  // All checks passed
-  const res: EApiUser = {
+  return NextResponse.json({
     id: user.id,
     externalPartitionId: app.externalPartitionId,
     externalOrganizationId: app.externalOrganizationId,
@@ -82,8 +80,7 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
     role: app.role,
     firstName: user.firstName,
     lastName: user.lastName,
-  };
-  return NextResponse.json(res);
+  });
 }
 
 export async function DELETE(): Promise<NextResponse> {

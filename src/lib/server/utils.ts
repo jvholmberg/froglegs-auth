@@ -4,12 +4,10 @@ import "server-only";
 
 import { encodeBase32UpperCaseNoPadding } from "@oslojs/encoding";
 import { IActionResult } from "@/lib/client/types";
-import { IUser } from "./db/types";
+import { IUser, Role } from "./db/types";
 import { NextResponse } from "next/server";
 import { TWO_FACTOR_MANDATORY } from "../client/constants";
-import { ISessionValidationResult } from "./session";
 import { headers } from "next/headers";
-import { Role } from "@/lib/types/role";
 
 export function generateRandomOTP(): string {
 	const bytes = new Uint8Array(5);
@@ -124,7 +122,7 @@ export function checkHasAppUserRole(
 
 export function checkApiRequestLoggedIn<T>(
   emptyResponse: T,
-  { user, session }: ISessionValidationResult,
+  { user, session }: { user: IUser | null; session: { twoFactorVerified: boolean } | null; },
 ) {
 
   // Check if user is logged in

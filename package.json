@@ -1,5 +1,5 @@
 {
-  "name": "vajper-auth-v2",
+  "name": "plumpen_auth",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -9,7 +9,9 @@
     "lint": "next lint",
     "clean": "node ./scripts/clean.js",
     "clear": "node ./scripts/clear.js",
-    "deploy": "node ./scripts/deploy.js"
+    "deploy": "node ./scripts/deploy.js",
+    "db:push": "npx drizzle-kit push",
+    "db:seed": "npx tsx src/lib/server/db/seed.ts"
   },
   "dependencies": {
     "@mantine/charts": "^7.16.3",
@@ -33,10 +35,11 @@
     "@tiptap/starter-kit": "^2.11.5",
     "bcrypt": "^5.1.1",
     "dayjs": "^1.11.13",
-    "dotenv": "^16.4.7",
-    "mariadb": "^3.4.0",
-    "next": "15.1.6",
+    "dotenv": "^16.6.1",
+    "drizzle-orm": "^0.42.0",
+    "next": "^15.5.4",
     "nodemailer": "^6.10.0",
+    "pg": "^8.14.1",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "recharts": "^2.15.1",
@@ -48,14 +51,17 @@
     "@eslint/eslintrc": "^3",
     "@types/node": "^20",
     "@types/nodemailer": "^6.4.17",
+    "@types/pg": "^8.11.13",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "drizzle-kit": "^0.31.5",
     "eslint": "^9",
     "eslint-config-next": "15.1.6",
     "node-ssh": "^13.2.0",
     "postcss": "^8.5.2",
     "postcss-preset-mantine": "^1.17.0",
     "postcss-simple-vars": "^7.0.1",
+    "tsx": "^4.19.3",
     "typescript": "^5"
   }
 }

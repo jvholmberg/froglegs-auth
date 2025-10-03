@@ -9,24 +9,19 @@ import { generateRandomOTP, getCookieDomain } from "@/lib/server/utils";
 import { ExpiringTokenBucket } from "@/lib/server/rate-limit";
 import { getCurrentSession } from "@/lib/server/session";
 import { sendMail } from "./email";
-import * as Database from "@/lib/server/db/sql";
-import { DB } from "./constants";
-import { TblEmailVerificationRequest } from "@/lib/types/email-verification-request";
+import db, { schema } from "@/lib/server/db";
+import { and, eq } from "drizzle-orm";
 
 export async function getUserEmailVerificationRequest(userId: number, id: string) {
-  const result = await Database.getRecord<IEmailVerificationRequest>(`
-    SELECT
-      id,
-      user_id AS userId,
-      email,
-      code,
-      expires_at AS expiresAt
-    FROM ${DB}.email_verification_request
-    WHERE
-      user_id = :userId
-      AND
-      id = :id
-  `, { id, userId });
+  const [result] = await db
+    .select()
+    .from(schema.emailVerificationRequestTable)
+    .where(and(
+      eq(schema.emailVerificationRequestTable.userId, userId),
+      eq(schema.emailVerificationRequestTable.id, id)
+    ))
+    .limit(1);
+
 	return result;
 }
 
@@ -45,30 +40,29 @@ export async function createEmailVerificationRequest(userId: number, email: stri
     email,
     expiresAt,
   };
-  await Database.insertSingle<TblEmailVerificationRequest>({
-    db: DB,
-    table: "email_verification_request",
-    columnData: {
+
+  const [result] = await db
+    .insert(schema.emailVerificationRequestTable)
+    .values({
       id: request.id,
-      user_id: request.userId,
+      userId: request.userId,
       code: request.code,
       email: request.email,
-      expires_at: request.expiresAt,
-    },
-  });
-	return request;
+      expiresAt: request.expiresAt,
+    }).returning();
+
+	return result;
 }
 
-export async function deleteUserEmailVerificationRequest(userId: number){
-  await Database.deleteQuery(`
-    DELETE FROM ${DB}.email_verification_request
-    WHERE user_id = :userId  
-  `, { userId });
+export async function deleteUserEmailVerificationRequest(userId: number) {
+  await db
+    .delete(schema.emailVerificationRequestTable)
+    .where(eq(schema.emailVerificationRequestTable.userId, userId));
 }
 
 export function sendVerificationEmail(email: string, code: string): void {
   sendMail({
-    from: "info@kaxig.com",
+    from: process.env.SMTP_USER ?? "",
     to: email,
     subject: "Din verifieringskod",
     text: `Din verifieringskod är ${code}`,

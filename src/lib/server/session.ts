@@ -5,14 +5,13 @@ import "server-only";
 import { encodeBase32LowerCaseNoPadding, encodeHexLowerCase } from "@oslojs/encoding";
 import { sha256 } from "@oslojs/crypto/sha2";
 
-import type { ISessionFlags, ISession, IUser } from "@/lib/server/db/types";
+import type { ISessionFlags } from "@/lib/server/db/types";
 import { cache } from "react";
 import { cookies, headers } from "next/headers";
-import * as Database from "@/lib/server/db/sql";
-import { DB } from "@/lib/server/constants";
+import db, { schema } from "@/lib/server/db";
 import { getOneUser } from "./user";
 import { getCookieDomain } from "./utils";
-import { TblSession } from "@/lib/types/session";
+import { and, eq } from "drizzle-orm";
 
 export async function getForwardedFor(): Promise<string> {
   const headerStore = await headers();
@@ -28,21 +27,22 @@ export async function getBearerToken(): Promise<string | null> {
   return token;
 }
 
-export async function validateSessionToken(token: string, clientIp: string | null): Promise<ISessionValidationResult> {
+export async function validateSessionToken(token: string, clientIp: string | null) {
   const sessionId = encodeHexLowerCase(sha256(new TextEncoder().encode(token)));
   const user = await getOneUser({ sessionId });
 
-  const session = await Database.getRecord<ISession & ISessionFlags>(`
-    SELECT
-      id,
-      user_id AS userId,
-      expires_at AS expiresAt,
-      two_factor_verified AS twoFactorVerified
-    FROM ${DB}.session
-    WHERE
-      id = :sessionId
-      ${clientIp ? "AND ip_number = :clientIp" : ""}
-  `, { sessionId, clientIp });
+  const [session] = await db
+    .select({
+      id: schema.sessionTable.id,
+      userId: schema.sessionTable.userId,
+      expiresAt: schema.sessionTable.expiresAt,
+      twoFactorVerified: schema.sessionTable.twoFactorVerified,
+    })
+    .from(schema.sessionTable)
+    .where(and(
+      eq(schema.sessionTable.id, sessionId),
+      clientIp ? eq(schema.sessionTable.ipNumber, clientIp) : undefined
+    ));
 
   if (!user || !session) {
     return { session: null, user: null };
@@ -50,10 +50,9 @@ export async function validateSessionToken(token: string, clientIp: string | nul
   
   // If session has expired we delete it and return null
   if (Date.now() >= session.expiresAt.getTime()) {
-    await Database.deleteQuery(`
-      DELETE FROM ${DB}.session
-      WHERE id = :sessionId 
-    `, { sessionId });
+    await db
+      .delete(schema.sessionTable)
+      .where(eq(schema.sessionTable.id, sessionId));
     return { session: null, user: null };
   }
 
@@ -63,13 +62,12 @@ export async function validateSessionToken(token: string, clientIp: string | nul
 
     // Add graceperiod onto session expiry to prevent it from expire
     session.expiresAt = new Date(Date.now() + gracePeriodInMs);
-    await Database.update<TblSession, string>({
-      db: DB,
-      table: "session",
-      idColumn: "id",
-      id: sessionId,
-      columnData: { expires_at: session.expiresAt }
-    });
+    await db
+      .update(schema.sessionTable)
+      .set({
+        expiresAt: session.expiresAt,
+      })
+      .where(eq(schema.sessionTable.id, sessionId));
   }
 
 	return { session, user };
@@ -101,17 +99,15 @@ export const getCurrentSession = cache(async (useAuthorizationHeader: boolean = 
 });
 
 export async function invalidateSession(sessionId: string) {
-  await Database.deleteQuery(`
-    DELETE FROM ${DB}.session
-    WHERE id = :sessionId 
-  `, { sessionId });
+  await db
+    .delete(schema.sessionTable)
+    .where(eq(schema.sessionTable.id, sessionId));
 }
 
 export async function invalidateUserSessions(userId: number) {
-  await Database.deleteQuery(`
-    DELETE FROM ${DB}.session
-    WHERE user_id = :userId 
-  `, { userId });
+  await db
+    .delete(schema.sessionTable)
+    .where(eq(schema.sessionTable.userId, userId));
 }
 
 export async function setSessionTokenCookie(token: string, expiresAt: Date) {
@@ -149,40 +145,24 @@ export function generateSessionToken() {
 
 export async function createSession(token: string, userId: number, flags: ISessionFlags) {
   const sessionId = encodeHexLowerCase(sha256(new TextEncoder().encode(token)));
-	const session: ISession = {
-    id: sessionId,
-		userId,
-		expiresAt: new Date(Date.now() + 1000 * 60 * 60 * 24 * 30),
-    twoFactorVerified: flags.twoFactorVerified,
-	};
   const ip = await getForwardedFor();
   
-  await Database.insertSingle<TblSession>({
-    db: DB,
-    table: "session",
-    columnData: {
-      id: sessionId,
-      user_id: userId,
-      expires_at: new Date(Date.now() + 1000 * 60 * 60 * 24 * 30),
-      ip_number: ip,
-      two_factor_verified: flags.twoFactorVerified,
-    },
-  })
+  const session = await db.insert(schema.sessionTable).values({
+    id: sessionId,
+    userId,
+    expiresAt: new Date(Date.now() + 1000 * 60 * 60 * 24 * 30),
+    ipNumber: ip,
+    twoFactorVerified: flags.twoFactorVerified,
+  }).returning();
+
 	return session;
 }
 
 export async function setSessionAs2FAVerified(sessionId: string) {
-  await Database.update<TblSession, string>({
-    db: DB,
-    table: "session",
-    idColumn: "id",
-    id: sessionId,
-    columnData: {
-      two_factor_verified: true,
-    }
-  });
+  await db
+    .update(schema.sessionTable)
+    .set({
+      twoFactorVerified: true,
+    })
+    .where(eq(schema.sessionTable.id, sessionId));
 }
-
-export type ISessionValidationResult =
-	| { session: ISession; user: IUser }
-	| { session: null; user: null };

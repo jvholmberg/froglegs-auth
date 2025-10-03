@@ -13,7 +13,11 @@ const nextConfig: NextConfig = {
     //   bodySizeLimit: '10mb',
     // },
   },
+  turbopack: {
+    
+  },
 	webpack: (config) => {
+    // https://oslo.js.org/reference/password/ 
 		config.externals.push("@node-rs/argon2", "@node-rs/bcrypt");
 		return config;
 	},

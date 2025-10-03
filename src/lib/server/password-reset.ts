@@ -8,10 +8,9 @@ import { sha256 } from "@oslojs/crypto/sha2";
 import { IPasswordResetSession, IUser } from "@/lib/server/db/types";
 import { generateRandomOTP, getCookieDomain } from "@/lib/server/utils";
 import { sendMail } from "./email";
-import * as Database from "@/lib/server/db/sql";
-import { DB } from "./constants";
+import db, { schema } from "@/lib/server/db";
+import { eq } from "drizzle-orm";
 import { getOneUser } from "./user";
-import { TblPasswordResetSession } from "@/lib/types/password-reset-session";
 
 export async function createPasswordResetSession(token: string, userId: number, email: string) {
 	const sessionId = encodeHexLowerCase(sha256(new TextEncoder().encode(token)));
@@ -24,38 +23,37 @@ export async function createPasswordResetSession(token: string, userId: number, 
 		emailVerified: false,
 		twoFactorVerified: false
 	};
-  await Database.insertSingle<TblPasswordResetSession>({
-    db: DB,
-    table: "password_reset_session",
-    columnData: {
+  await db
+    .insert(schema.passwordResetSessionTable)
+    .values({
       id: session.id,
-      user_id: session.userId,
+      userId: session.userId,
       email: session.email,
-      expires_at: session.expiresAt,
+      expiresAt: session.expiresAt,
       code: session.code,
-      email_verified: session.emailVerified,
-      two_factor_verified: session.twoFactorVerified,
-    },
-  });
+      emailVerified: session.emailVerified,
+      twoFactorVerified: session.twoFactorVerified,
+    });
 	return session;
 }
 
 export async function validatePasswordResetSessionToken(token: string): Promise<IPasswordResetSessionValidationResult> {
 	const sessionId = encodeHexLowerCase(sha256(new TextEncoder().encode(token)));
   const user = await getOneUser({ passwordResetSessionId: sessionId });
-  const session = await Database.getRecord<IPasswordResetSession>(`
-    SELECT
-      id,
-      user_id AS userId,
-      email,
-      code,
-      expires_at AS expiresAt,
-      email_verified AS emailVerified,
-      two_factor_verified AS twoFactorVerified
-    FROM ${DB}.password_reset_session
-    WHERE
-      id = :sessionId
-  `, { sessionId });
+  
+  const [session] = await db
+    .select({
+      id: schema.passwordResetSessionTable.id,
+      userId: schema.passwordResetSessionTable.userId,
+      email: schema.passwordResetSessionTable.email,
+      code: schema.passwordResetSessionTable.code,
+      expiresAt: schema.passwordResetSessionTable.expiresAt,
+      emailVerified: schema.passwordResetSessionTable.emailVerified,
+      twoFactorVerified: schema.passwordResetSessionTable.twoFactorVerified,
+    })
+    .from(schema.passwordResetSessionTable)
+    .where(eq(schema.passwordResetSessionTable.id, sessionId))
+    .limit(1);
 
   if (!user || !session) {
     return { session: null, user: null };
@@ -63,44 +61,33 @@ export async function validatePasswordResetSessionToken(token: string): Promise<
     
   // If session has expired we delete it and return null
   if (Date.now() >= session.expiresAt.getTime()) {
-    await Database.deleteQuery(`
-      DELETE FROM ${DB}.password_reset_session
-      WHERE id = :sessionId 
-    `, { sessionId });
+    await db
+      .delete(schema.passwordResetSessionTable)
+      .where(eq(schema.passwordResetSessionTable.id, sessionId));
+
     return { session: null, user: null };
   }
 	return { session, user };
 }
 
 export async function setPasswordResetSessionAsEmailVerified(sessionId: string) {
-  await Database.update<TblPasswordResetSession, string>({
-    db: DB,
-    table: "password_reset_session",
-    idColumn: "id",
-    id: sessionId,
-    columnData: {
-      email_verified: true,
-    },
-  });
+  await db
+    .update(schema.passwordResetSessionTable)
+    .set({ emailVerified: true })
+    .where(eq(schema.passwordResetSessionTable.id, sessionId));
 }
 
 export async function setPasswordResetSessionAs2FAVerified(sessionId: string) {
-  await Database.update<TblPasswordResetSession, string>({
-    db: DB,
-    table: "password_reset_session",
-    idColumn: "id",
-    id: sessionId,
-    columnData: {
-      two_factor_verified: true,
-    },
-  });
+  await db
+    .update(schema.passwordResetSessionTable)
+    .set({ twoFactorVerified: true })
+    .where(eq(schema.passwordResetSessionTable.id, sessionId));
 }
 
 export async function invalidateUserPasswordResetSessions(userId: number) {
-  await Database.deleteQuery(`
-    DELETE FROM ${DB}.password_reset_session
-    WHERE user_id = :userId 
-  `, { userId });
+  await db
+    .delete(schema.passwordResetSessionTable)
+    .where(eq(schema.passwordResetSessionTable.userId, userId));
 }
 
 export async function validatePasswordResetSessionRequest() {

@@ -5,21 +5,19 @@ import "server-only";
 import { ExpiringTokenBucket } from "@/lib/server/rate-limit";
 import { generateRandomRecoveryCode } from "@/lib/server/utils";
 import { decryptToString, encryptString } from "@/lib/server/encryption";
-import * as Database from "@/lib/server/db/sql";
-import { DB } from "./constants";
-import { TblSession } from "@/lib/types/session";
+import db, { schema } from "@/lib/server/db";
 import { getCurrentSession } from "./session";
+import { and, eq, sql } from "drizzle-orm";
 
 export const totpBucket = new ExpiringTokenBucket<number>(5, 60 * 30);
 export const recoveryCodeBucket = new ExpiringTokenBucket<number>(3, 60 * 60);
 
 export async function resetUser2FAWithRecoveryCode(userId: number, recoveryCode: string) {
-  const result = await Database.getRecord<{ recoveryCode: Uint8Array; }>(`
-    SELECT
-      recovery_code
-    FROM ${DB}.user
-    WHERE id = :userId
-  `, { userId })
+  const result = await db.query.userTable.findFirst({
+    where: (userTable, { eq }) => eq(userTable.id, userId),
+    columns: { recoveryCode: true },
+  });
+  
   if (!result?.recoveryCode) {
     return false;
   }
@@ -28,61 +26,49 @@ export async function resetUser2FAWithRecoveryCode(userId: number, recoveryCode:
   if (recoveryCode !== userRecoveryCode) {
     return false;
   }
-  const ret = await Database.write(async (connection) => {
+
+  const ret: boolean = await db.transaction(async (tx) => {
     const newRecoveryCode = generateRandomRecoveryCode();
     const encryptedNewRecoveryCode = encryptString(newRecoveryCode);
+    
+    await tx.update(schema.sessionTable).set({
+      twoFactorVerified: false,
+    }).where(eq(schema.sessionTable.userId, userId));
 
-    await Database.update<TblSession>({
-      connection,
-      db: DB,
-      table: "session",
-      idColumn: "user_id",
-      id: userId,
-      columnData: {
-        two_factor_verified: false,
-      },
-    });
-
-    await Database.query(`
-      UPDATE ${DB}.user
-      SET
-        recovery_code = :encryptedNewRecoveryCode,
-        totp_key = null
-      WHERE
-        id = :userId
-        AND
-        recovery_code = :recoveryCode
-    `, {
-      encryptedNewRecoveryCode,
-      userId,
-      recoveryCode
-    }, { connection });
+    await tx.update(schema.userTable).set({
+      recoveryCode: encryptedNewRecoveryCode,
+      totpKey: null,
+    }).where(and(
+      eq(schema.userTable.id, userId),
+      sql`${schema.userTable.recoveryCode} = ${recoveryCode}`,
+    ));
 
     return true;
   });
-	return ret == true;
+
+	return ret === true;
 }
 
 export async function remove2FAFromSignedInUser() {
   const { user } = await getCurrentSession();
+  if (!user) {
+    return false;
+  }
 
-  return await Database.write(async (connection) => {
+  const ret: boolean = await db.transaction(async (tx) => {
+    
     // Remove 2FA from user
-    Database.query(`
-      UPDATE ${DB}.user
-      SET totp_key = null
-      WHERE
-        id = :userId
-    `, { userId: user?.id }, { connection });
+    await tx.update(schema.userTable).set({
+      totpKey: null,
+    }).where(eq(schema.userTable.id, user.id));
 
     // Mark all sessions for user as not being 2FA verified
-    Database.query(`
-      UPDATE ${DB}.session
-      SET two_factor_verified = 0
-      WHERE
-        user_id = :userId
-    `, { userId: user?.id }, { connection });
+    await tx.update(schema.sessionTable).set({
+      twoFactorVerified: false,
+    }).where(eq(schema.sessionTable.userId, user.id));
 
     return true;
   });
+
+	return ret === true;
 }

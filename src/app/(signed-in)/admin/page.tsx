@@ -20,7 +20,6 @@ export default async function AdminPage() {
 
   const users = await getUsers();
   const roles = await getRoles()
-  
 
   return (
     <PageTransition>

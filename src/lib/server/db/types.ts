@@ -1,10 +1,24 @@
-/***** IMPORTANT! ***************************************************************/
-import "server-only";
-/********************************************************************************/
+import { InferSelectModel } from "drizzle-orm";
+import * as schema from "./schema";
 
-import { Role } from "@/lib/types/role";
+export type TblUser = InferSelectModel<typeof schema.userTable>;
+export type TblUserDetails = InferSelectModel<typeof schema.userDetailsTable>;
+export type TblSession = InferSelectModel<typeof schema.sessionTable>;
+export type TblPasswordResetSession = InferSelectModel<typeof schema.passwordResetSessionTable>;
+export type TblEmailVerificationRequest = InferSelectModel<typeof schema.emailVerificationRequestTable>;
+export type TblApp = InferSelectModel<typeof schema.appTable>;
+export type TblUserApp = InferSelectModel<typeof schema.userAppTable>;
+export type TblAppInvitation = InferSelectModel<typeof schema.appInvitationTable>;
 
-// Internal types
+// Types derived from enums
+export type UserRole = typeof schema.userRolesEnum.enumValues[number];
+export type UserAppRole = typeof schema.userAppRolesEnum.enumValues[number];
+export type Role = UserRole | UserAppRole; // "super_admin" | "admin" | "user" | "manager" | "guest"
+
+
+export type TblNewUser = typeof schema.userTable.$inferInsert;
+export type TblNewUserDetails = typeof schema.userDetailsTable.$inferInsert;
+export type TblNewAppInvitation = typeof schema.appInvitationTable.$inferInsert;
 
 export interface IApp {
   id: number;
@@ -26,9 +40,9 @@ export interface IUserAppItem {
 export interface IAppUser {
   id: number;
   email: string
-  role: Role;
-  firstName: string;
-  lastName: string;
+  role: string;
+  firstName: string | null;
+  lastName: string | null;
 }
 
 export interface IAppInvitation {
@@ -38,7 +52,7 @@ export interface IAppInvitation {
   appDescription: string | null;
   externalPartitionId: number | null;
   externalOrganizationId: number | null;
-  roleSlug: Role | null;
+  roleSlug: string | null;
   email: string;
   expiresAt: Date | null;
 }
@@ -72,19 +86,6 @@ export interface IEmailVerificationRequest {
 }
 
 export interface IUser  {
-  id: number;
-  email: string;
-  role: Role | null;
-  firstName: string | null;
-  lastName: string | null;
-  apps: IUserAppItem[];
-  emailVerified: boolean;
-  registered2FA: boolean;
-}
-
-// External types
-
-export interface EApiUser  {
   id: number;
   email: string;
   role: Role | null;
