@@ -29,7 +29,7 @@ export function SignOutButton() {
         variant="light"
         color="dark"
         fw={500}
-        c={colorScheme === 'dark' ? "white" : "dark"}
+        c={colorScheme === "dark" ? "white" : "dark"}
         leftSection={<IconLogout />}>Logga ut</Button>
 		</form>
 	);

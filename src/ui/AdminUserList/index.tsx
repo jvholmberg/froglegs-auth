@@ -2,14 +2,13 @@
 
 import { Table, TableTr, TableTd, TableThead, TableTh, TableTbody, Text, Menu, MenuDivider, MenuDropdown, MenuItem, MenuLabel, MenuTarget, ActionIcon, Select, ComboboxData, Group, Anchor, PasswordInput } from "@mantine/core";
 import { getRoleName } from "@/lib/client/utils";
-import { IUser } from "@/lib/server/db/types";
+import { IUser, Role, TblRole } from "@/lib/server/db/types";
 import { IconTrash, IconKey, IconCrown, IconPencil } from "@tabler/icons-react";
 import { modals } from "@mantine/modals";
 import { notifications } from "@mantine/notifications";
 import { dangerouslySetUserPasswordAction, deleteUserAction, updateUserRoleAction } from "@/app/(signed-in)/admin/actions";
 import { useRouter } from "next/navigation";
 import { useRef } from "react";
-import { Role, TblRole } from "@/lib/types/role";
 
 interface IProps {
   data: IUser[];

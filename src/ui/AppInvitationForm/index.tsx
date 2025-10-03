@@ -3,14 +3,13 @@
 import { createAppInvitationAction } from "@/app/(signed-in)/invitations/actions";
 import { createAppInvitationFormDataSchema, ICreateAppInvitationFormData } from "@/app/(signed-in)/invitations/schema";
 import { ROUTE_HOME } from "@/lib/client/constants";
-import { IApp, IUser, IUserAppItem } from "@/lib/server/db/types";
+import { IApp, IUser, IUserAppItem, TblRole } from "@/lib/server/db/types";
 import { TextInput, Button, Select, ComboboxData, Card, NumberInput } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { notifications } from "@mantine/notifications";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 import { ShowForUserAppRoles } from "../ShowForUserAppRoles";
-import { TblRole } from "@/lib/types/role";
 
 interface IProps {
   apps: IApp[];

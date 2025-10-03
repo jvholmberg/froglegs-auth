@@ -1,9 +1,9 @@
 import Link from "next/link";
 import { Card, Group, Badge, Button, Text, Image, CardSection } from "@mantine/core";
-import { Role } from "@/lib/types/role";
 import { getRoleName } from "@/lib/client/utils";
 
 import  classes from "./AppCard.module.css";
+import { Role } from "@/lib/server/db/types";
 
 interface IProps {
   imageUrl?: string;

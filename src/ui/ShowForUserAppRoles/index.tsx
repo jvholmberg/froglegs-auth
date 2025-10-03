@@ -1,5 +1,4 @@
-import { IUser } from "@/lib/server/db/types";
-import { Role } from "@/lib/types/role";
+import { IUser, Role } from "@/lib/server/db/types";
 import { ReactNode } from "react";
 
 interface IProps {
@@ -20,7 +19,8 @@ export function ShowForUserAppRoles({
   if (allowed) {
     return (
       <>
-      {children}</>
+        {children}
+      </>
     );
   }
   return null;

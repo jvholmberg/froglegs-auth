@@ -49,12 +49,6 @@ export function SignInForm() {
         label="Lösenord"
         placeholder="Ditt lösenord"
         {...form.getInputProps(`password`)} />
-      {/* <Checkbox
-        key={form.key(`keepSignedIn`)}
-        mt="md"
-        size="md"
-        label="Håll mig inloggad"
-        {...form.getInputProps(`keepSignedIn`)} /> */}
       <Button type="submit" fullWidth mt="lg" size="md" color="dark">
         Logga in
       </Button>
