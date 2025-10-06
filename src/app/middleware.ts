@@ -3,16 +3,12 @@ import type { NextRequest } from "next/server";
 
 // TODO: Control CORS from here instead of next.config.js due to the increased control we can achieve here.
 // const allowedOrigins = [
-//   "https://admin.centrumappen.se",
-//   "https://minasidor.fanhults.se",
-//   "https://minasidor.entremattan.se",
 // ];
 
 // const corsOptions = {
 //   'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
 //   'Access-Control-Allow-Headers': 'Content-Type, Authorization',
 // }
-
 
 export async function middleware(request: NextRequest): Promise<NextResponse> {
 	if (request.method === "GET") {
